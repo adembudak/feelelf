@@ -14,10 +14,10 @@ using Elf32_Half = std::uint16_t;
 using Elf32_Sword = std::int32_t;
 using Elf32_Word = std::uint32_t;
 
-constexpr std::size_t EI_NIDENT = 16; // Size of e_ident[]
+constexpr std::size_t ei_nident = 16; // Size of e_ident[]
 
 struct Elf32_header_t {
-  Elf_byte e_ident[EI_NIDENT]; // ELF identification
+  Elf_byte e_ident[ei_nident]; // ELF identification
   Elf32_Half e_type;           // object file type
   Elf32_Half e_machine;        // architecture
   Elf32_Word e_version;        // object file version
