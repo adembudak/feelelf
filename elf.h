@@ -36,6 +36,8 @@ struct Elf32_header_t {
 bool init(Elf32_header_t &header, const char *file) noexcept;
 std::string_view decode_data(Elf32_header_t &header) noexcept;
 std::string_view decode_class(Elf32_header_t &header) noexcept;
+std::size_t decode_file_vesion(Elf32_header_t &header) noexcept;
+std::string_view decode_os_abi(Elf32_header_t &header) noexcept;
 
 struct Elf32_Section_Header {
   Elf32_Word sh_name;  // name of the section

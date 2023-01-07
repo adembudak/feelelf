@@ -1,4 +1,5 @@
 #include "elf.h"
+// #include <elf.h>
 
 #include <cstdint>
 #include <fstream>
@@ -21,33 +22,38 @@ enum EI_CLASS : std::size_t {
 };
 
 constexpr std::size_t EI_DATA = 5; // Data encoding
-enum EI_DATA : std::size_t {
-  ELFDATANONE = 0, // Invalid data encoding
-  ELFDATA2LSB = 1, // 2's complement little endian: 0x0102 -> 0x02 0x01
-  ELFDATA2MSB = 2  // 2's complement big endian   : 0x0102 -> 0x01 0x02
+enum data : std::size_t {
+  dataNone = 0, // Invalid data encoding
+  data2lsb = 1, // 2's complement little endian: 0x0102 -> 0x02 0x01
+  data2msb = 2  // 2's complement big endian   : 0x0102 -> 0x01 0x02
 };
 
 constexpr std::size_t EI_VERSION = 6; // ELF spec version
 
 constexpr std::size_t EI_OSABI = 7;
-enum e_osabi {
-  ELFOSABI_NONE = 0,  // Same as ELFOSABI_SYSV
-  ELFOSABI_SYSV,      // UNIX System V ABI
-  ELFOSABI_HPUX,      // HP-UX ABI
-  ELFOSABI_NETBSD,    // NetBSD ABI
-  ELFOSABI_LINUX,     // Linux ABI
-  ELFOSABI_SOLARIS,   // Solaris ABI
-  ELFOSABI_IRIX,      // IRIX ABI
-  ELFOSABI_FREEBSD,   // FreeBSD ABI
-  ELFOSABI_TRU64,     // TRU64 UNIX ABI
-  ELFOSABI_ARM,       // ARM architecture ABI
-  ELFOSABI_STANDALONE // Stand-alone (embedded) ABI
+enum osabi {
+  none = 0,        // UNIX System V ABI
+  sysv = 0,        // Alias
+  hpux = 1,        // HP-UX
+  netbsd = 2,      // NetBSD
+  gnu = 3,         // Object uses GNU ELF extensions
+  linux = 3,       // Compatibility alias
+  solaris = 6,     // Sun Solaris
+  aix = 7,         // IBM AIX
+  irix = 8,        // SGI Irix
+  freebsd = 9,     // FreeBSD
+  tru64 = 10,      // Compaq TRU64 UNIX
+  modesto = 11,    // Novell Modesto
+  openbsd = 12,    // OpenBSD
+  arm_aeabi = 64,  // ARM EABI
+  arm = 97,        // ARM
+  standalone = 255 // Standalone (embedded) application
 };
 
 constexpr std::size_t EI_ABIVERSION = 8;
 constexpr std::size_t EI_PAD = 9; // padding bytes, set to 0, reserved for future use
 
-enum e_type_ : Elf32_Half {
+enum type : Elf32_Half {
   ET_NONE = 0,        // No file type
   ET_REL = 1,         // Relocatible file
   ET_EXEC = 2,        // Executable file
@@ -117,7 +123,7 @@ constexpr std::size_t SHN_HIPROC = 0xff1f;
 constexpr std::size_t SHN_ABS = 0xfff1;
 constexpr std::size_t SHN_COMMON = 0xfff2;
 constexpr std::size_t SHN_HIRESERVE = 0xffff;
-}
+} // namespace
 
 bool init(Elf32_header_t &header, const char *file) noexcept {
   std::ifstream fin;
@@ -153,9 +159,9 @@ bool init(Elf32_header_t &header, const char *file) noexcept {
 
 std::string_view decode_data(Elf32_header_t &header) noexcept {
   switch(header.e_ident[EI_DATA]) {
-  case EI_DATA::ELFDATANONE: return "None";
-  case EI_DATA::ELFDATA2LSB: return "2's complement, little endian";
-  case EI_DATA::ELFDATA2MSB: return "2's complement, big endian";
+  case data::dataNone: return "None";
+  case data::data2lsb: return "2's complement, little endian";
+  case data::data2msb: return "2's complement, big endian";
   }
 }
 
@@ -166,4 +172,29 @@ std::string_view decode_class(Elf32_header_t &header) noexcept {
   case EI_CLASS::ELFCLASS64: return "ELF64";
   }
 }
+
+std::size_t decode_file_vesion(Elf32_header_t &header) noexcept {
+  return header.e_ident[EI_VERSION];
 }
+
+std::string_view decode_os_abi(Elf32_header_t &header) noexcept {
+  switch(header.e_ident[EI_OSABI]) {
+  case osabi::sysv: return "UNIX System V ABI";
+  case osabi::hpux: return "HP-UX";
+  case osabi::netbsd: return "NetBSD";
+  case osabi::gnu: return "Object uses GNU ELF extensions";
+  // case osabi::linux: return "Compatibility alias";
+  case osabi::solaris: return "Sun Solaris";
+  case osabi::aix: return "IBM AIX";
+  case osabi::irix: return "SGI Irix";
+  case osabi::freebsd: return "FreeBSD";
+  case osabi::tru64: return "Compaq TRU64 UNIX";
+  case osabi::modesto: return "Novell Modesto";
+  case osabi::openbsd: return "OpenBSD";
+  case osabi::arm_aeabi: return "ARM EABI";
+  case osabi::arm: return "ARM";
+  case osabi::standalone: return "(embedded) application";
+  }
+}
+
+} // namespace elf
