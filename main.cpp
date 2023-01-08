@@ -12,11 +12,11 @@ int main(int argc, const char *argv[]) {
 
   elf::init(elf32_Ehdr, argv[1]);
 
-  fmt::print("Magic: {:x}\n", fmt::join(elf32_Ehdr.e_ident, " "));
-  fmt::print("Class: {}\n", elf::decode_class(elf32_Ehdr)); // ELF64
-  fmt::print("Data: {}\n", elf::decode_data(elf32_Ehdr));   // 2's complement, little endian
+  fmt::print("Magic:          {:x}\n", fmt::join(elf32_Ehdr.e_ident, " "));
+  fmt::print("Class:          {}\n", elf::decode_class(elf32_Ehdr)); // ELF64
+  fmt::print("Data:           {}\n", elf::decode_data(elf32_Ehdr));  // 2's complement, little endian
   // fmt::print("Version: {}"); // 1 (current)
-  fmt::print("OS/ABI: {}\n", decode_os_abi(elf32_Ehdr)); // UNIX - GNU
+  fmt::print("OS/ABI:         {}\n", decode_os_abi(elf32_Ehdr)); // UNIX - GNU
   /*
   fmt::print("ABI Version: {}");                                     // 0
   fmt::print("Type: {}");                                            // EXEC (Executable file)
