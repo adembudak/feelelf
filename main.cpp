@@ -7,22 +7,25 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <cassert>
+
 int main(int argc, const char *argv[]) {
-  elf::Elf32_header_t elf32_Ehdr;
+  elf::Elf64_header_t elf64_header;
 
-  elf::init(elf32_Ehdr, argv[1]);
+  bool ret = elf::init(elf64_header, argv[1]);
+  assert(ret);
 
-  fmt::print("Magic:          {:x}\n", fmt::join(elf32_Ehdr.e_ident, " "));
-  fmt::print("Class:          {}\n", elf::decode_class(elf32_Ehdr)); // ELF64
-  fmt::print("Data:           {}\n", elf::decode_data(elf32_Ehdr));  // 2's complement, little endian
-  // fmt::print("Version: {}"); // 1 (current)
-  fmt::print("OS/ABI:         {}\n", decode_os_abi(elf32_Ehdr)); // UNIX - GNU
+  fmt::print("Magic:          {:x}\n", fmt::join(elf64_header.ident, " "));
+  fmt::print("Class:          {}\n", elf::decode_class(elf64_header));        // ELF64
+  fmt::print("Data:           {}\n", elf::decode_data(elf64_header));         // 2's complement, little endian
+  fmt::print("Version:        {}\n", elf::decode_file_version(elf64_header)); // 1 (current)
+  fmt::print("OS/ABI:         {}\n", decode_os_abi(elf64_header));            // UNIX - GNU
+  fmt::print("ABI Version:    {}\n", elf64_header.ident[8]);                  // 0
+  fmt::print("Type:           {}\n", elf::decode_type(elf64_header));         // EXEC (Executable file)
+  fmt::print("Machine:        {} {}\n", decode_machine(elf64_header), elf64_header.machine);
+  // fmt::print("Version:        {}\n", elf64_Ehdr.version); // 0x1
   /*
-  fmt::print("ABI Version: {}");                                     // 0
-  fmt::print("Type: {}");                                            // EXEC (Executable file)
-  fmt::print("Machine: {}");                                         // Advanced Micro Devices X86-64
-  fmt::print("Version: {}");                                         // 0x1
-  fmt::print("Entry point address: {:X}\n", elf32_Ehdr.e_entry); // 0x40de00
+  fmt::print("Entry point address: {:X}\n", elf64_Ehdr.e_entry); // 0x40de00
   fmt::print("Start of program headers: {}");          // 64 (bytes into file)
   fmt::print("Start of section headers: {}");          // 1106752 (bytes into file)
   fmt::print("Flags: {}");                             // 0x0
