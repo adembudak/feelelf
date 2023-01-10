@@ -19,6 +19,11 @@ enum data : std::size_t {
   data2msb = 2  // 2's complement big endian   : 0x0102 -> 0x01 0x02
 };
 
+enum version : Elf64_Word { // file version
+  versionNone = 0,          // Invalid version
+  current = 1               // Current version
+};
+
 enum osabi {
   none = 0,        // UNIX System V ABI
   sysv = 0,        // Alias
@@ -299,11 +304,6 @@ enum machine : Elf64_Half {
   num = 253
 };
 
-enum version : Elf64_Word { // file version
-  versionNone = 0,          // Invalid version
-  current = 1               // Current version
-};
-
 struct Elf32_program_header_t {
   uint32_t p_type;
   Elf64_Off p_offset;
@@ -386,8 +386,11 @@ std::string_view decode_class(Elf64_header_t &header) noexcept {
   }
 }
 
-std::size_t decode_file_version(Elf64_header_t &header) noexcept {
-  return header.ident[i_version];
+std::string_view decode_file_version(Elf64_header_t &header) noexcept {
+  switch(header.ident[i_version]) {
+  case version::versionNone: return "0 (Invalid)";
+  case version::current: return "1 (Current)";
+  }
 }
 
 std::string_view decode_os_abi(Elf64_header_t &header) noexcept {

@@ -20,7 +20,7 @@ int main(int argc, const char *argv[]) {
   fmt::print("Data:           {}\n", elf::decode_data(elf64_header));         // 2's complement, little endian
   fmt::print("Version:        {}\n", elf::decode_file_version(elf64_header)); // 1 (current)
   fmt::print("OS/ABI:         {}\n", decode_os_abi(elf64_header));            // UNIX - GNU
-  fmt::print("ABI Version:    {}\n", elf64_header.ident[8]);                  // 0
+  fmt::print("ABI Version:    {}\n", elf64_header.ident[elf::i_abiversion]);  // 0
   fmt::print("Type:           {}\n", elf::decode_type(elf64_header));         // EXEC (Executable file)
   fmt::print("Machine:        {} {}\n", decode_machine(elf64_header), elf64_header.machine);
   // fmt::print("Version:        {}\n", elf64_Ehdr.version); // 0x1
