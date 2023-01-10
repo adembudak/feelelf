@@ -6,9 +6,25 @@
 namespace elf {
 
 using Elf_byte = unsigned char;
+
+using Elf32_Half = std::uint16_t;
+using Elf32_Sword = std::int32_t;
+using Elf32_Word = std::uint32_t;
+
+using Elf32_SXword = std::int64_t;
+using Elf32_Xword = std::uint64_t;
+
+using Elf32_Addr = std::uint32_t;
+using Elf32_Off = std::uint32_t;
+using Elf32_Section = std::uint16_t;
+using Elf32_Versym = std::uint16_t;
+
 using Elf64_Half = std::uint16_t;
 using Elf64_Sword = std::int32_t;
 using Elf64_Word = std::uint32_t;
+
+using Elf64_SXword = std::int64_t;
+using Elf64_Xword = std::uint64_t;
 
 using Elf64_Addr = std::uint64_t;
 using Elf64_Off = std::uint64_t;
