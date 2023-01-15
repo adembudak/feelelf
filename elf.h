@@ -77,7 +77,7 @@ struct Elf64_header_t {
   Elf64_Half shstrndx;      // section header table index
 };
 
-bool init(Elf64_header_t &header, const char *file) noexcept;
+[[nodiscard]] bool init(Elf64_header_t &header, const char *file) noexcept;
 std::string_view decode_data(Elf64_header_t &header) noexcept;
 std::string_view decode_class(Elf64_header_t &header) noexcept;
 std::string_view decode_file_version(Elf64_header_t &header) noexcept;
