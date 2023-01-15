@@ -61,20 +61,20 @@ struct Elf32_header_t {
 };
 
 struct Elf64_header_t {
-  Elf_byte ident[i_nident]; // ELF identification
-  Elf64_Half type;          // object file type
-  Elf64_Half machine;       // architecture
-  Elf64_Word version;       // object file version
-  Elf64_Addr entry;         // entry point, virtual address to transfer control
-  Elf64_Off phoff;          // program header table offset, 0 if no program header
-  Elf64_Off shoff;          // section header table offset, 0 if no section header
-  Elf64_Word flags;         // processor specific flags
-  Elf64_Half ehsize;        // ELF header size in bytes
-  Elf64_Half phentsize;     // program header table size in bytes
-  Elf64_Half phnum;         // number of entries in program header
-  Elf64_Half shentsize;     // section header table size in bytes
-  Elf64_Half shnum;         // number of entries in section header
-  Elf64_Half shstrndx;      // section header table index
+  Elf_byte ident[i_nident];
+  Elf64_Half type;
+  Elf64_Half machine;
+  Elf64_Word version;
+  Elf64_Addr entry;
+  Elf64_Off phoff;
+  Elf64_Off shoff;
+  Elf64_Word flags;
+  Elf64_Half ehsize;
+  Elf64_Half phentsize;
+  Elf64_Half phnum;
+  Elf64_Half shentsize;
+  Elf64_Half shnum;
+  Elf64_Half shstrndx;
 };
 
 [[nodiscard]] bool init(Elf64_header_t &header, const char *file) noexcept;
@@ -86,25 +86,25 @@ std::string_view decode_machine(Elf64_header_t &header) noexcept;
 std::string_view decode_type(Elf64_header_t &header) noexcept;
 
 struct Elf32_Program_Header_t {
-  uint32_t p_type;
-  Elf32_Off p_offset;
-  Elf32_Addr p_vaddr;
-  Elf32_Addr p_paddr;
-  uint32_t p_filesz;
-  uint32_t p_memsz;
-  uint32_t p_flags;
-  uint32_t p_align;
+  Elf32_Word p_type;   // Segment type
+  Elf32_Off p_offset;  // Segment file offset
+  Elf32_Addr p_vaddr;  // Segment virtual address
+  Elf32_Addr p_paddr;  // Segment physical address
+  Elf32_Word p_filesz; // Segment size in file
+  Elf32_Word p_memsz;  // Segment size in memory
+  Elf32_Word p_flags;  // Segment flags
+  Elf32_Word p_align;  // Segment alignment
 };
 
 struct Elf64_Program_Header_t {
-  uint32_t p_type;
-  uint32_t p_flags;
+  Elf64_Word p_type;
+  Elf64_Word p_flags;
   Elf64_Off p_offset;
   Elf64_Addr p_vaddr;
   Elf64_Addr p_paddr;
-  uint64_t p_filesz;
-  uint64_t p_memsz;
-  uint64_t p_align;
+  Elf64_Xword p_filesz;
+  Elf64_Xword p_memsz;
+  Elf64_Xword p_align;
 };
 
 struct Elf32_Section_Header_t {
