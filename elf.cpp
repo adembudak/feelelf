@@ -339,11 +339,10 @@ constexpr std::size_t SHN_COMMON = 0xfff2;
 constexpr std::size_t SHN_HIRESERVE = 0xffff;
 
 bool init(Elf64_header_t &header, const char *file) noexcept {
-  std::ifstream fin{file};
+  std::ifstream fin{file, std::ios::binary};
   if(!fin.good()) return false;
 
-  for(auto &c : header.ident)
-    fin >> c;
+  fin.read(reinterpret_cast<char *>(header.ident), i_nident);
 
   if(header.ident[i_mag0] != 0x7f || //
      header.ident[i_mag1] != 'E' ||  //
@@ -351,21 +350,21 @@ bool init(Elf64_header_t &header, const char *file) noexcept {
      header.ident[i_mag3] != 'F')    //
     return false;
 
-  fin >> header.type;
-  fin >> header.machine;
-  fin >> header.version;
-  fin >> header.entry;
-  fin >> header.phoff;
-  fin >> header.shoff;
-  fin >> header.flags;
+  fin.read(reinterpret_cast<char *>(&header.type), sizeof(decltype(header.type)));
+  fin.read(reinterpret_cast<char *>(&header.machine), sizeof(decltype(header.machine)));
+  fin.read(reinterpret_cast<char *>(&header.version), sizeof(decltype(header.version)));
+  fin.read(reinterpret_cast<char *>(&header.entry), sizeof(decltype(header.entry)));
+  fin.read(reinterpret_cast<char *>(&header.phoff), sizeof(decltype(header.phoff)));
+  fin.read(reinterpret_cast<char *>(&header.shoff), sizeof(decltype(header.shoff)));
+  fin.read(reinterpret_cast<char *>(&header.flags), sizeof(decltype(header.flags)));
 
-  fin >> header.ehsize;
-  fin >> header.phentsize;
-  fin >> header.phnum;
+  fin.read(reinterpret_cast<char *>(&header.ehsize), sizeof(decltype(header.ehsize)));
+  fin.read(reinterpret_cast<char *>(&header.phentsize), sizeof(decltype(header.phentsize)));
+  fin.read(reinterpret_cast<char *>(&header.phnum), sizeof(decltype(header.phnum)));
 
-  fin >> header.shentsize;
-  fin >> header.shnum;
-  fin >> header.shstrndx;
+  fin.read(reinterpret_cast<char *>(&header.shentsize), sizeof(decltype(header.shentsize)));
+  fin.read(reinterpret_cast<char *>(&header.shnum), sizeof(decltype(header.shnum)));
+  fin.read(reinterpret_cast<char *>(&header.shstrndx), sizeof(decltype(header.shstrndx)));
 
   return true;
 }

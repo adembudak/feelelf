@@ -31,18 +31,18 @@ using Elf64_Off = std::uint64_t;
 using Elf64_Section = std::uint16_t;
 using Elf64_Versym = std::uint16_t;
 
-constexpr std::size_t i_mag0 = 0;    // File identitfication, 0x7f
-constexpr std::size_t i_mag1 = 1;    // File identitfication, 'E'
-constexpr std::size_t i_mag2 = 2;    // File identitfication, 'L'
-constexpr std::size_t i_mag3 = 3;    // File identitfication, 'F'
-constexpr std::size_t i_class = 4;   // File class
-constexpr std::size_t i_data = 5;    // Data encoding
-constexpr std::size_t i_version = 6; // ELF spec version
-constexpr std::size_t i_osabi = 7;
-constexpr std::size_t i_abiversion = 8;
-constexpr std::size_t i_pad = 9;     // [9, 16) padding bytes, set to 0, reserved for future use
-constexpr std::size_t i_nident = 16; // Size of e_ident[]
-                                     //
+constexpr std::size_t i_mag0{0};    // File identitfication, 0x7f
+constexpr std::size_t i_mag1{1};    // File identitfication, 'E'
+constexpr std::size_t i_mag2{2};    // File identitfication, 'L'
+constexpr std::size_t i_mag3{3};    // File identitfication, 'F'
+constexpr std::size_t i_class{4};   // File class
+constexpr std::size_t i_data{5};    // Data encoding
+constexpr std::size_t i_version{6}; // ELF spec version
+constexpr std::size_t i_osabi{7};
+constexpr std::size_t i_abiversion{8};
+constexpr std::size_t i_pad{9};     // [9, 16) padding bytes, set to 0, reserved for future use
+constexpr std::size_t i_nident{16}; // Size of e_ident[]
+
 struct Elf32_header_t {
   Elf_byte ident[i_nident]; // ELF identification
   Elf32_Half type;          // object file type
