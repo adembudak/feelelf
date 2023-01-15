@@ -7,12 +7,27 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <ranges>
+#include <string>
+#include <vector>
 
 int main(int argc, const char *argv[]) {
+  bool header{};
+  std::string file;
+  std::vector<std::filesystem::path> files;
+
+  CLI::App app{{}, "FeelELF"};
+  app.add_flag("--file-header", header, "Display the ELF file header");
+  app.add_option("elf-files", files);
+  CLI11_PARSE(app, argc, argv);
+
   elf::Elf64_header_t elf64_header;
 
-  bool ret = elf::init(elf64_header, argv[1]);
+  using namespace std::ranges;
+  for(const auto &p : files | views::filter([](auto &p) { return exists(p); })) {
+    bool is_good = elf::init(elf64_header, p.c_str());
 
+    if(header & is_good) {
       fmt::print("ELF Header:\n");
       fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(elf64_header.ident, " "));
       fmt::print("  {:<34} {}\n", "Class:", elf::decode_class(elf64_header));
@@ -33,6 +48,8 @@ int main(int argc, const char *argv[]) {
       fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", elf64_header.shentsize);
       fmt::print("  {:<34} {}\n", "Number of section headers:", elf64_header.shnum);
       fmt::print("  {:<34} {}\n\n", "Section header string table index:", elf64_header.shstrndx);
+    }
+  }
 }
 
 /*
