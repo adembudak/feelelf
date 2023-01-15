@@ -13,25 +13,26 @@ int main(int argc, const char *argv[]) {
 
   bool ret = elf::init(elf64_header, argv[1]);
 
-  fmt::print("Magic:                             {:x}\n", fmt::join(elf64_header.ident, " "));
-  fmt::print("Class:                             {}\n", elf::decode_class(elf64_header));
-  fmt::print("Data:                              {}\n", elf::decode_data(elf64_header));
-  fmt::print("Version:                           {}\n", elf::decode_file_version(elf64_header));
-  fmt::print("OS/ABI:                            {}\n", decode_os_abi(elf64_header));
-  fmt::print("ABI Version:                       {}\n", elf64_header.ident[elf::i_abiversion]);
-  fmt::print("Type:                              {}\n", elf::decode_type(elf64_header));
-  fmt::print("Machine:                           {}\n", decode_machine(elf64_header));
-  fmt::print("Version:                           {}\n", elf64_header.version);
-  fmt::print("Entry point address:               {}\n", elf64_header.entry);
-  fmt::print("Start of program headers:          {}\n", elf64_header.phoff);
-  fmt::print("Start of section headers:          {}\n", elf64_header.shoff);
-  fmt::print("Flags:                             {}\n", elf64_header.flags);
-  fmt::print("Size of this header:               {}\n", elf64_header.ehsize);
-  fmt::print("Size of program headers:           {}\n", elf64_header.phentsize);
-  fmt::print("Number of program headers:         {}\n", elf64_header.phnum);
-  fmt::print("Size of section headers:           {}\n", elf64_header.shentsize);
-  fmt::print("Number of section headers:         {}\n", elf64_header.shnum);
-  fmt::print("Section header string table index: {}\n", elf64_header.shstrndx);
+      fmt::print("ELF Header:\n");
+      fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(elf64_header.ident, " "));
+      fmt::print("  {:<34} {}\n", "Class:", elf::decode_class(elf64_header));
+      fmt::print("  {:<34} {}\n", "Data:", elf::decode_data(elf64_header));
+      fmt::print("  {:<34} {}\n", "Version:", elf::decode_file_version(elf64_header));
+      fmt::print("  {:<34} {}\n", "OS/ABI:", decode_os_abi(elf64_header));
+      fmt::print("  {:<34} {}\n", "ABI Version:", elf64_header.ident[elf::i_abiversion]);
+      fmt::print("  {:<34} {}\n", "Type:", elf::decode_type(elf64_header));
+      fmt::print("  {:<34} {}\n", "Machine:", decode_machine(elf64_header));
+      fmt::print("  {:<34} {:#x}\n", "Version:", elf64_header.version);
+      fmt::print("  {:<34} {:#x}\n", "Entry point address:", elf64_header.entry);
+      fmt::print("  {:<34} {}\n", "Start of program headers:", elf64_header.phoff);
+      fmt::print("  {:<34} {}\n", "Start of section headers:", elf64_header.shoff);
+      fmt::print("  {:<34} {:#x}\n", "Flags:", elf64_header.flags);
+      fmt::print("  {:<34} {} (bytes)\n", "Size of this header:", elf64_header.ehsize);
+      fmt::print("  {:<34} {} (bytes)\n", "Size of program headers:", elf64_header.phentsize);
+      fmt::print("  {:<34} {}\n", "Number of program headers:", elf64_header.phnum);
+      fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", elf64_header.shentsize);
+      fmt::print("  {:<34} {}\n", "Number of section headers:", elf64_header.shnum);
+      fmt::print("  {:<34} {}\n\n", "Section header string table index:", elf64_header.shstrndx);
 }
 
 /*
