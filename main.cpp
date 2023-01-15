@@ -8,12 +8,10 @@
 #include <fmt/ranges.h>
 
 #include <ranges>
-#include <string>
 #include <vector>
 
 int main(int argc, const char *argv[]) {
   bool header{};
-  std::string file;
   std::vector<std::filesystem::path> files;
 
   CLI::App app{{}, "FeelELF"};
@@ -23,8 +21,7 @@ int main(int argc, const char *argv[]) {
 
   elf::Elf64_header_t elf64_header;
 
-  using namespace std::ranges;
-  for(const auto &p : files | views::filter([](auto &p) { return exists(p); })) {
+  for(const auto &p : files | std::views::filter([](auto &p) { return exists(p); })) {
     bool is_good = elf::init(elf64_header, p.c_str());
 
     if(header & is_good) {
