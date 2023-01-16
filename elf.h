@@ -83,28 +83,28 @@ std::string_view decode_class(Elf64_header_t &header) noexcept;
 std::string_view decode_file_version(Elf64_header_t &header) noexcept;
 std::string_view decode_os_abi(Elf64_header_t &header) noexcept;
 std::string_view decode_machine(Elf64_header_t &header) noexcept;
-std::string_view decode_type(Elf64_header_t &header) noexcept;
+std::string_view decode_filetype(Elf64_header_t &header) noexcept;
 
 struct Elf32_Program_Header_t {
-  Elf32_Word p_type;   // Segment type
-  Elf32_Off p_offset;  // Segment file offset
-  Elf32_Addr p_vaddr;  // Segment virtual address
-  Elf32_Addr p_paddr;  // Segment physical address
-  Elf32_Word p_filesz; // Segment size in file
-  Elf32_Word p_memsz;  // Segment size in memory
-  Elf32_Word p_flags;  // Segment flags
-  Elf32_Word p_align;  // Segment alignment
+  Elf32_Word type;   // Segment type
+  Elf32_Off offset;  // Segment file offset
+  Elf32_Addr vaddr;  // Segment virtual address
+  Elf32_Addr paddr;  // Segment physical address
+  Elf32_Word filesz; // Segment size in file
+  Elf32_Word memsz;  // Segment size in memory
+  Elf32_Word flags;  // Segment flags
+  Elf32_Word align;  // Segment alignment
 };
 
 struct Elf64_Program_Header_t {
-  Elf64_Word p_type;
-  Elf64_Word p_flags;
-  Elf64_Off p_offset;
-  Elf64_Addr p_vaddr;
-  Elf64_Addr p_paddr;
-  Elf64_Xword p_filesz;
-  Elf64_Xword p_memsz;
-  Elf64_Xword p_align;
+  Elf64_Word type;
+  Elf64_Word flags;
+  Elf64_Off offset;
+  Elf64_Addr vaddr;
+  Elf64_Addr paddr;
+  Elf64_Xword filesz;
+  Elf64_Xword memsz;
+  Elf64_Xword align;
 };
 
 struct Elf32_Section_Header_t {

@@ -43,7 +43,6 @@ enum osabi {
   standalone = 255 // Standalone (embedded) application
 };
 
-//
 enum type : Elf64_Half {
   typeNone = 0,    // No file type
   rel = 1,         // Relocatible file
@@ -304,40 +303,6 @@ enum machine : Elf64_Half {
   num = 253
 };
 
-struct Elf32_program_header_t {
-  uint32_t p_type;
-  Elf64_Off p_offset;
-  Elf64_Addr p_vaddr;
-  Elf64_Addr p_paddr;
-  uint32_t p_filesz;
-  uint32_t p_memsz;
-  uint32_t p_flags;
-  uint32_t p_align;
-} Elf32_Phdr;
-
-enum class p_type { // what are the values of this enumerators?
-  PT_NULL,
-  PT_LOAD,
-  PT_DYNAMIC,
-  PT_INTERP,
-  PT_NOTE,
-  PT_SHLIB,
-  PT_PHDR,
-  PT_LOPROC,
-  PT_HIPROC,
-  PT_GNU_STACK
-};
-
-////////////////////////////////
-// special section indexes
-constexpr std::size_t SHN_UNDEF = 0;
-constexpr std::size_t SHN_LORESERVE = 0xff00;
-constexpr std::size_t SHN_LOPROC = 0xff00;
-constexpr std::size_t SHN_HIPROC = 0xff1f;
-constexpr std::size_t SHN_ABS = 0xfff1;
-constexpr std::size_t SHN_COMMON = 0xfff2;
-constexpr std::size_t SHN_HIRESERVE = 0xffff;
-
 bool init(Elf64_header_t &header, const char *file) noexcept {
   std::ifstream fin{file, std::ios::binary};
   if(!fin.good()) return false;
@@ -433,11 +398,10 @@ std::string_view decode_machine(Elf64_header_t &header) noexcept {
   case machine::ia_64: return "Intel Itanium";
   case machine::x86_64: return "AMD x86-64";
   case machine::vax: return "DEC Vax";
-  default: return "Some other... get a girlfriend :)";
   }
 }
 
-std::string_view decode_type(Elf64_header_t &header) noexcept {
+std::string_view decode_filetype(Elf64_header_t &header) noexcept {
   switch(header.type) {
   case type::typeNone: return "No file type";
   case type::rel: return "Relocatible file";
