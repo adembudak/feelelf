@@ -1,5 +1,3 @@
-// ELF header parser based on: man 5 elf
-
 #include "elf.h"
 
 #include <CLI/CLI.hpp>
@@ -7,13 +5,14 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include <ranges>
+#include <filesystem>
 #include <vector>
 
 int main(int argc, const char *argv[]) {
+  namespace fs = std::filesystem;
   bool header{};
   bool segments{};
-  std::vector<std::filesystem::path> files;
+  std::vector<fs::path> files;
 
   CLI::App app{{}, "FeelELF"};
   app.add_flag("--file-header", header, "Display the ELF file header");
@@ -23,10 +22,13 @@ int main(int argc, const char *argv[]) {
 
   elf::Elf64_header_t elf64_header;
 
-  for(const auto &p : files | std::views::filter([](auto &p) { return exists(p); })) {
+  for(const auto &p : files) {
     bool is_good = elf::init(elf64_header, p.c_str());
 
-    if(header & is_good) {
+    if(!fs::exists(p)) continue;
+    if(!is_good) continue;
+
+    if(header) {
       fmt::print("ELF Header:\n");
       fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(elf64_header.ident, " "));
       fmt::print("  {:<34} {}\n", "Class:", elf::decode_class(elf64_header));
@@ -54,27 +56,3 @@ int main(int argc, const char *argv[]) {
     }
   }
 }
-
-/*
-- iABI object file format, the ELF (Executable and Linking Format)
-- object file types: relocatible file, executible file, shared object file
-- object files created by the assembler and link editor
-
-        Linking View                 Execution View
-  +--------------------------+  +--------------------------+
-  |       ELF header         |  |      ELF header          |
-  |---------------------------  |---------------------------
-  |Program header table (opt)|  | Program header table     |
-  |--------------------------|  |--------------------------|
-  |       Section 1          |  |                          |
-  |--------------------------|  |       Segment 1          |
-  |           ...            |  |                          |
-  |--------------------------|  |--------------------------|
-  |       Section N          |  |                          |
-  |--------------------------|  |       Segment 2          |
-  |        ...               |  |       ...                |
-  |--------------------------|  |--------------------------|
-  |   Section header table   |  |  Section header table    |
-  |                          |  |          (opt)           |
-  +--------------------------+  +--------------------------+
-*/
