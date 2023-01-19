@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <string_view>
+#include <vector>
 
 namespace elf {
 
@@ -25,7 +26,7 @@ enum version : Elf64_Word { // file version
 };
 
 enum osabi {
-  none = 0,        // UNIX System V ABI
+  osNone = 0,      // UNIX System V ABI
   sysv = 0,        // Alias
   hpux = 1,        // HP-UX
   netbsd = 2,      // NetBSD
@@ -413,4 +414,75 @@ std::string_view decode_filetype(Elf64_header_t &header) noexcept {
   }
 }
 
-} // namespace elf
+// Legal values for pType (segment type)
+enum pType {
+  pNull = 0,                 // program header table entry unused
+  load = 1,                  // loadable program segment
+  dynamic = 2,               // dynamic linking information
+  interp = 3,                // program interpreter
+  note = 4,                  // auxiliary information
+  shlib = 5,                 // reserved
+  phdr = 6,                  // entry for header table itself
+  tls = 7,                   // thread-local storage segment
+  num_ = 8,                  // number of defined types
+  loos = 0x60000000,         // start of OS-specific
+  gnu_eh_frame = 0x6474e550, // GCC .eh_frame_hdr segment
+  gnu_stack = 0x6474e551,    // indicates stack executability
+  gnu_relro = 0x6474e552,    // read-only after relocation
+  losunw = 0x6ffffffa,       //
+  sunwbss = 0x6ffffffa,      // Sun Specific segment
+  sunwstack = 0x6ffffffb,    // stack segment
+  hisunw = 0x6fffffff,       //
+  hios = 0x6FFfffff,         // end of OS-specific
+  loproc_ = 0x70000000,      // start of processor-specific
+  hiproc_ = 0x7fffffff       // end of processor-specific
+};
+
+std::vector<Elf64_Program_Header_t> decode_program_headers(const Elf64_header_t &header,
+                                                           const char *file) noexcept {
+  std::ifstream fin{file, std::ios::binary};
+
+  std::vector<Elf64_Program_Header_t> temp(header.phnum);
+  fin.seekg(header.phoff);
+
+  for(auto &ph : temp) {
+    fin.read(reinterpret_cast<char *>(&ph.type), sizeof(decltype(ph.type)));
+    fin.read(reinterpret_cast<char *>(&ph.flags), sizeof(decltype(ph.flags)));
+    fin.read(reinterpret_cast<char *>(&ph.offset), sizeof(decltype(ph.offset)));
+    fin.read(reinterpret_cast<char *>(&ph.vaddr), sizeof(decltype(ph.vaddr)));
+    fin.read(reinterpret_cast<char *>(&ph.paddr), sizeof(decltype(ph.paddr)));
+    fin.read(reinterpret_cast<char *>(&ph.filesz), sizeof(decltype(ph.filesz)));
+    fin.read(reinterpret_cast<char *>(&ph.memsz), sizeof(decltype(ph.memsz)));
+    fin.read(reinterpret_cast<char *>(&ph.align), sizeof(decltype(ph.align)));
+  }
+
+  return temp;
+}
+
+std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept {
+  // clang-format off
+  switch(pHeader.type) {
+  case pType::pNull:        return "NULL";
+  case pType::load:         return "LOAD";
+  case pType::dynamic:      return "DYNAMIC";
+  case pType::interp:       return "INTERP";
+  case pType::note:         return "NOTE";
+  case pType::shlib:        return "SHLIB";
+  case pType::phdr:         return "PHDR";
+  case pType::tls:          return "TLS";
+  case pType::num_:         return "NUM";
+  case pType::loos:         return "LOOS";
+  case pType::gnu_eh_frame: return "GNU_EH_FRAME";
+  case pType::gnu_stack:    return "GNU_STACK";
+  case pType::gnu_relro:    return "GNU_RELRO";
+  case pType::losunw:       return "LOSUNW";
+//case pType::sunwbss:      return "SUNWBSS";
+  case pType::sunwstack:    return "SUNWSTACK";
+//case pType::hisunw:       return "HISUNW";
+  case pType::hios:         return "HIOS";
+  case pType::loproc_:      return "LOPROC";
+  case pType::hiproc_:      return "HIPROC";
+  }
+}
+
+}

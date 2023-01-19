@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 namespace elf {
 
@@ -107,6 +108,10 @@ struct Elf64_Program_Header_t {
   Elf64_Xword align;
 };
 
+std::vector<Elf64_Program_Header_t> decode_program_headers(const Elf64_header_t &header,
+                                                           const char *file) noexcept;
+std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept;
+
 struct Elf32_Section_Header_t {
   Elf32_Word name;
   Elf32_Word type;
@@ -132,5 +137,4 @@ struct Elf64_Section_Header_t {
   Elf64_Word addralign;
   Elf64_Word entsize;
 };
-
 }
