@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-namespace elf {
+namespace feelelf {
 
 using Elf_byte = unsigned char;
 

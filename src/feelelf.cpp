@@ -1,11 +1,11 @@
-#include "elf.h"
+#include <feelelf/feelelf.h>
 
 #include <cstdint>
 #include <fstream>
 #include <string_view>
 #include <vector>
 
-namespace elf {
+namespace feelelf {
 
 // elements of Elf64_header_t.e_ident array
 enum class_ : std::size_t {

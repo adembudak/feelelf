@@ -8,8 +8,9 @@ project(
 find_package(fmt QUIET REQUIRED)
 find_package(CLI11 QUIET REQUIRED)
 
-add_library(elf elf.cpp)
-add_library(elf::elf ALIAS elf)
+add_library(feelelf src/feelelf.cpp)
+target_include_directories(feelelf PUBLIC include)
+add_library(feelelf::feelelf ALIAS feelelf)
 
-add_executable(feelelf main.cpp)
-target_link_libraries(feelelf PRIVATE elf::elf fmt::fmt CLI11::CLI11)
+add_executable(readelf demo/main.cpp)
+target_link_libraries(readelf PRIVATE feelelf::feelelf fmt::fmt CLI11::CLI11)

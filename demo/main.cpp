@@ -1,4 +1,4 @@
-#include "elf.h"
+#include <feelelf/feelelf.h>
 
 #include <CLI/CLI.hpp>
 
@@ -32,10 +32,10 @@ int main(int argc, const char *argv[]) {
     return app.exit(e);
   }
 
-  elf::Elf64_header_t elf64_header;
+  feelelf::Elf64_header_t elf64_header;
 
   for(const auto &p : files) {
-    bool is_good = elf::init(elf64_header, p.c_str());
+    bool is_good = feelelf::init(elf64_header, p.c_str());
 
     if(!fs::exists(p)) continue;
     if(!is_good) continue;
@@ -43,12 +43,12 @@ int main(int argc, const char *argv[]) {
     if(show_header) {
       fmt::print("ELF Header:\n");
       fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(elf64_header.ident, " "));
-      fmt::print("  {:<34} {}\n", "Class:", elf::decode_class(elf64_header));
-      fmt::print("  {:<34} {}\n", "Data:", elf::decode_data(elf64_header));
-      fmt::print("  {:<34} {}\n", "Version:", elf::decode_file_version(elf64_header));
+      fmt::print("  {:<34} {}\n", "Class:", feelelf::decode_class(elf64_header));
+      fmt::print("  {:<34} {}\n", "Data:", feelelf::decode_data(elf64_header));
+      fmt::print("  {:<34} {}\n", "Version:", feelelf::decode_file_version(elf64_header));
       fmt::print("  {:<34} {}\n", "OS/ABI:", decode_os_abi(elf64_header));
-      fmt::print("  {:<34} {}\n", "ABI Version:", elf64_header.ident[elf::i_abiversion]);
-      fmt::print("  {:<34} {}\n", "Type:", elf::decode_filetype(elf64_header));
+      fmt::print("  {:<34} {}\n", "ABI Version:", elf64_header.ident[feelelf::i_abiversion]);
+      fmt::print("  {:<34} {}\n", "Type:", feelelf::decode_filetype(elf64_header));
       fmt::print("  {:<34} {}\n", "Machine:", decode_machine(elf64_header));
       fmt::print("  {:<34} {:#x}\n", "Version:", elf64_header.version);
       fmt::print("  {:<34} {:#x}\n", "Entry point address:", elf64_header.entry);
@@ -65,7 +65,7 @@ int main(int argc, const char *argv[]) {
 
     if(show_segments) {
       if(!show_header) {
-        fmt::print("\nElf file type is {}\n", elf::decode_class(elf64_header));
+        fmt::print("\nElf file type is {}\n", feelelf::decode_class(elf64_header));
         fmt::print("Entry point {:#x}\n", elf64_header.entry);
         fmt::print("There are {} program headers, starting at offset {}\n\n", elf64_header.phnum,
                    elf64_header.phoff);
@@ -73,9 +73,9 @@ int main(int argc, const char *argv[]) {
       fmt::print("Program Headers:\n");
       fmt::print("Type           Offset             FileSize           VirtAddr           MemSize            "
                  "PhysAddr           Flags Align\n");
-      const auto oo = elf::decode_program_headers(elf64_header, p.c_str());
+      const auto oo = feelelf::decode_program_headers(elf64_header, p.c_str());
       for(const auto &o : oo) {
-        fmt::print("{}\n", elf::decode_program_header_type(o));
+        fmt::print("{}\n", feelelf::decode_program_header_type(o));
       }
     }
 
