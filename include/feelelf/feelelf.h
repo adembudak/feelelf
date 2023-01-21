@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace feelelf {
@@ -32,19 +34,19 @@ using Elf64_Off = std::uint64_t;
 using Elf64_Section = std::uint16_t;
 using Elf64_Versym = std::uint16_t;
 
-constexpr std::size_t i_mag0{0};    // File identitfication, 0x7f
-constexpr std::size_t i_mag1{1};    // File identitfication, 'E'
-constexpr std::size_t i_mag2{2};    // File identitfication, 'L'
-constexpr std::size_t i_mag3{3};    // File identitfication, 'F'
-constexpr std::size_t i_class{4};   // File class
-constexpr std::size_t i_data{5};    // Data encoding
-constexpr std::size_t i_version{6}; // ELF spec version
-constexpr std::size_t i_osabi{7};
-constexpr std::size_t i_abiversion{8};
-constexpr std::size_t i_pad{9};     // [9, 16) padding bytes, set to 0, reserved for future use
-constexpr std::size_t i_nident{16}; // Size of e_ident[]
+inline constexpr std::size_t i_mag0{0};       // File identitfication, 0x7f
+inline constexpr std::size_t i_mag1{1};       // File identitfication, 'E'
+inline constexpr std::size_t i_mag2{2};       // File identitfication, 'L'
+inline constexpr std::size_t i_mag3{3};       // File identitfication, 'F'
+inline constexpr std::size_t i_class{4};      // File class
+inline constexpr std::size_t i_data{5};       // Data encoding
+inline constexpr std::size_t i_version{6};    // ELF spec version
+inline constexpr std::size_t i_osabi{7};      // OS ABI
+inline constexpr std::size_t i_abiversion{8}; // ABI version
+inline constexpr std::size_t i_pad{9};        // [9, 16) padding bytes, set to 0, reserved for future use
+inline constexpr std::size_t i_nident{16};    // Size of e_ident[]
 
-struct Elf32_header_t {
+struct Elf32_Header_t {
   Elf_byte ident[i_nident]; // ELF identification
   Elf32_Half type;          // object file type
   Elf32_Half machine;       // architecture
@@ -61,7 +63,7 @@ struct Elf32_header_t {
   Elf32_Half shstrndx;      // section header table index
 };
 
-struct Elf64_header_t {
+struct Elf64_Header_t {
   Elf_byte ident[i_nident];
   Elf64_Half type;
   Elf64_Half machine;
@@ -77,24 +79,17 @@ struct Elf64_header_t {
   Elf64_Half shnum;
   Elf64_Half shstrndx;
 };
-
-[[nodiscard]] bool init(Elf64_header_t &header, const char *file) noexcept;
-std::string_view decode_data(Elf64_header_t &header) noexcept;
-std::string_view decode_class(Elf64_header_t &header) noexcept;
-std::string_view decode_file_version(Elf64_header_t &header) noexcept;
-std::string_view decode_os_abi(Elf64_header_t &header) noexcept;
-std::string_view decode_machine(Elf64_header_t &header) noexcept;
-std::string_view decode_filetype(Elf64_header_t &header) noexcept;
+using Elf_Header_t = std::variant<Elf32_Header_t, Elf64_Header_t>;
 
 struct Elf32_Program_Header_t {
-  Elf32_Word type;   // Segment type
-  Elf32_Off offset;  // Segment file offset
-  Elf32_Addr vaddr;  // Segment virtual address
-  Elf32_Addr paddr;  // Segment physical address
-  Elf32_Word filesz; // Segment size in file
-  Elf32_Word memsz;  // Segment size in memory
-  Elf32_Word flags;  // Segment flags
-  Elf32_Word align;  // Segment alignment
+  Elf32_Word type;   // segment type
+  Elf32_Off offset;  // segment file offset
+  Elf32_Addr vaddr;  // segment virtual address
+  Elf32_Addr paddr;  // segment physical address
+  Elf32_Word filesz; // segment size in file
+  Elf32_Word memsz;  // segment size in memory
+  Elf32_Word flags;  // segment flags
+  Elf32_Word align;  // segment alignment
 };
 
 struct Elf64_Program_Header_t {
@@ -107,10 +102,7 @@ struct Elf64_Program_Header_t {
   Elf64_Xword memsz;
   Elf64_Xword align;
 };
-
-std::vector<Elf64_Program_Header_t> decode_program_headers(const Elf64_header_t &header,
-                                                           const char *file) noexcept;
-std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept;
+using Program_Header_t = std::variant<Elf32_Program_Header_t, Elf64_Program_Header_t>;
 
 struct Elf32_Section_Header_t {
   Elf32_Word name;
@@ -137,4 +129,60 @@ struct Elf64_Section_Header_t {
   Elf64_Word addralign;
   Elf64_Word entsize;
 };
-}
+using Section_Header_t = std::variant<Elf32_Section_Header_t, Elf64_Section_Header_t>;
+
+class FileHeader {
+  Elf_Header_t elf_header;
+  std::vector<Program_Header_t> program_headers;
+  std::vector<Section_Header_t> section_headers;
+
+public:
+  [[nodiscard]] auto open(const char *file) noexcept -> bool;
+  auto decode() noexcept -> void;
+
+  // clang-format off
+  [[nodiscard]] auto identificationArray() noexcept -> std::span<Elf_byte> const; // ident
+  [[nodiscard]] auto fileClass()        noexcept -> std::string_view const; // ident[i_class]
+  [[nodiscard]] auto fileDataEncoding() noexcept -> std::string_view const; // ident[i_data]
+  [[nodiscard]] auto fileVersion()      noexcept -> std::string_view const; // ident[i_version]
+  [[nodiscard]] auto osABI()            noexcept -> std::string_view const; // ident[i_osabi]
+  [[nodiscard]] auto ABIVersion()       noexcept -> int;                    // ident[i_abiversion]
+
+  [[nodiscard]] auto type()                noexcept -> std::string_view const;
+  [[nodiscard]] auto machine()             noexcept -> std::string_view const;
+  [[nodiscard]] auto version()             noexcept -> int const;
+  [[nodiscard]] auto entryPoint()          noexcept -> int const;
+  [[nodiscard]] auto programHeaderOffset() noexcept -> int const;
+  [[nodiscard]] auto sectionHeaderOffset() noexcept -> int const;
+
+  [[nodiscard]] auto programHeaders()    noexcept -> const decltype(program_headers) &;
+  [[nodiscard]] auto sectionHeaders()    noexcept -> const decltype(section_headers) &;
+
+  [[nodiscard]] auto programHeaderType(const Program_Header_t& ph) noexcept -> std::string_view const ;
+  [[nodiscard]] auto programHeaderFlag(const Program_Header_t& ph) noexcept -> std::string_view const ;
+
+  [[nodiscard]] auto flags()             noexcept -> int const;
+  [[nodiscard]] auto headerSize()        noexcept -> int const;
+
+  [[nodiscard]] auto programHeaderSize() noexcept -> int const;
+  [[nodiscard]] auto numProgramHeaders() noexcept -> int const;
+
+  [[nodiscard]] auto sectionHeaderSize() noexcept -> int const;
+  [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
+  [[nodiscard]] auto sectionHeaderStringTable() noexcept -> int const;
+
+
+private:
+  [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;
+  [[nodiscard]] auto hasSectionHeaders() noexcept -> bool const;
+  [[nodiscard]] auto isELF() noexcept -> bool const;
+  [[nodiscard]] auto is64bit() noexcept -> bool const;
+};
+
+static_assert(std::copyable<FileHeader>);
+static_assert(std::movable<FileHeader>);
+static_assert(std::semiregular<FileHeader>);
+
+std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept;
+
+} // naemspace feelelf

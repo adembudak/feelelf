@@ -32,55 +32,83 @@ int main(int argc, const char *argv[]) {
     return app.exit(e);
   }
 
-  feelelf::Elf64_header_t elf64_header;
+  feelelf::FileHeader header;
 
   for(const auto &p : files) {
-    bool is_good = feelelf::init(elf64_header, p.c_str());
+    if(!fs::exists(p)) {
+      fmt::print("readelf: Error: '{}': No such file\n", p.c_str());
+      continue;
+    }
 
-    if(!fs::exists(p)) continue;
-    if(!is_good) continue;
+    bool is_good = header.open(p.c_str());
+
+    if(!is_good) {
+      fmt::print("readelf: Error: Not an ELF file - it has the wrong magic bytes at the start\n");
+      continue;
+    }
+
+    header.decode();
 
     if(show_header) {
       fmt::print("ELF Header:\n");
-      fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(elf64_header.ident, " "));
-      fmt::print("  {:<34} {}\n", "Class:", feelelf::decode_class(elf64_header));
-      fmt::print("  {:<34} {}\n", "Data:", feelelf::decode_data(elf64_header));
-      fmt::print("  {:<34} {}\n", "Version:", feelelf::decode_file_version(elf64_header));
-      fmt::print("  {:<34} {}\n", "OS/ABI:", decode_os_abi(elf64_header));
-      fmt::print("  {:<34} {}\n", "ABI Version:", elf64_header.ident[feelelf::i_abiversion]);
-      fmt::print("  {:<34} {}\n", "Type:", feelelf::decode_filetype(elf64_header));
-      fmt::print("  {:<34} {}\n", "Machine:", decode_machine(elf64_header));
-      fmt::print("  {:<34} {:#x}\n", "Version:", elf64_header.version);
-      fmt::print("  {:<34} {:#x}\n", "Entry point address:", elf64_header.entry);
-      fmt::print("  {:<34} {}\n", "Start of program headers:", elf64_header.phoff);
-      fmt::print("  {:<34} {}\n", "Start of section headers:", elf64_header.shoff);
-      fmt::print("  {:<34} {:#x}\n", "Flags:", elf64_header.flags);
-      fmt::print("  {:<34} {} (bytes)\n", "Size of this header:", elf64_header.ehsize);
-      fmt::print("  {:<34} {} (bytes)\n", "Size of program headers:", elf64_header.phentsize);
-      fmt::print("  {:<34} {}\n", "Number of program headers:", elf64_header.phnum);
-      fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", elf64_header.shentsize);
-      fmt::print("  {:<34} {}\n", "Number of section headers:", elf64_header.shnum);
-      fmt::print("  {:<34} {}\n\n", "Section header string table index:", elf64_header.shstrndx);
+      fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(header.identificationArray(), " "));
+      fmt::print("  {:<34} {}\n", "Class:", header.fileClass());
+      fmt::print("  {:<34} {}\n", "Data:", header.fileDataEncoding());
+      fmt::print("  {:<34} {}\n", "Version:", header.fileVersion());
+      fmt::print("  {:<34} {}\n", "OS/ABI:", header.osABI());
+      fmt::print("  {:<34} {}\n", "ABI Version:", header.ABIVersion());
+      fmt::print("  {:<34} {}\n", "Type:", header.type());
+      fmt::print("  {:<34} {}\n", "Machine:", header.machine());
+      fmt::print("  {:<34} {:#x}\n", "Version:", header.version());
+      fmt::print("  {:<34} {:#x}\n", "Entry point address:", header.entryPoint());
+      fmt::print("  {:<34} {}\n", "Start of program headers:", header.programHeaderOffset());
+      fmt::print("  {:<34} {}\n", "Start of section headers:", header.sectionHeaderOffset());
+      fmt::print("  {:<34} {:#x}\n", "Flags:", header.flags());
+      fmt::print("  {:<34} {} (bytes)\n", "Size of this header:", header.headerSize());
+      fmt::print("  {:<34} {} (bytes)\n", "Size of program headers:", header.programHeaderSize());
+      fmt::print("  {:<34} {}\n", "Number of program headers:", header.numProgramHeaders());
+      fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", header.sectionHeaderSize());
+      fmt::print("  {:<34} {}\n", "Number of section headers:", header.numSectionHeaders());
+      fmt::print("  {:<34} {}\n\n", "Section header string table index:", header.sectionHeaderStringTable());
     }
 
     if(show_segments) {
       if(!show_header) {
-        fmt::print("\nElf file type is {}\n", feelelf::decode_class(elf64_header));
-        fmt::print("Entry point {:#x}\n", elf64_header.entry);
-        fmt::print("There are {} program headers, starting at offset {}\n\n", elf64_header.phnum,
-                   elf64_header.phoff);
+        fmt::print("\nElf file type is {}\n", header.fileClass());
+        fmt::print("Entry point {:#x}\n", header.entryPoint());
+        fmt::print("There are {} program headers, starting at offset {}\n\n", header.numProgramHeaders(),
+                   header.programHeaderOffset());
       }
       fmt::print("Program Headers:\n");
-      fmt::print("Type           Offset             FileSize           VirtAddr           MemSize            "
-                 "PhysAddr           Flags Align\n");
-      const auto oo = feelelf::decode_program_headers(elf64_header, p.c_str());
-      for(const auto &o : oo) {
-        fmt::print("{}\n", feelelf::decode_program_header_type(o));
+
+      fmt::print("{:^14} {:^16} {:^16} {:^16} {:^16} {:^16} {:^8} {:<8}\n", "Type", "Offset", "FileSize",
+                 "VirtAddr", "MemSize", "PhysAddr", "Flags", "Align");
+
+      for(const auto &o : header.programHeaders()) {
+        if(auto x64 = std::get_if<feelelf::Elf64_Program_Header_t>(&o))
+          fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<16} {:#016x}\n",
+                     header.programHeaderType(o), //
+                     x64->offset,                 //
+                     x64->filesz,                 //
+                     x64->vaddr,                  //
+                     x64->memsz,                  //
+                     x64->paddr,                  //
+                     header.programHeaderFlag(o), //
+                     x64->align);
+
+        else if(auto x86 = std::get_if<feelelf::Elf32_Program_Header_t>(&o))
+          fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<16} {:#016x}\n",
+                     header.programHeaderType(o), //
+                     x86->offset,                 //
+                     x86->filesz,                 //
+                     x86->vaddr,                  //
+                     x86->memsz,                  //
+                     x86->paddr,                  //
+                     header.programHeaderFlag(o), //
+                     x86->align);
       }
     }
 
-    if(show_version) {
-      fmt::print("feelelf 0.0.1\n");
-    }
+    if(show_version) fmt::print("feelelf 0.0.1\n");
   }
 }

@@ -1,11 +1,19 @@
 #include <feelelf/feelelf.h>
 
+#include <elf.h>
+
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <string_view>
 #include <vector>
 
 namespace feelelf {
+
+// clang-format off
+template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+// clang-format on
 
 // elements of Elf64_header_t.e_ident array
 enum class_ : std::size_t {
@@ -304,116 +312,6 @@ enum machine : Elf64_Half {
   num = 253
 };
 
-bool init(Elf64_header_t &header, const char *file) noexcept {
-  std::ifstream fin{file, std::ios::binary};
-  if(!fin.good()) return false;
-
-  fin.read(reinterpret_cast<char *>(header.ident), i_nident);
-
-  if(header.ident[i_mag0] != 0x7f || //
-     header.ident[i_mag1] != 'E' ||  //
-     header.ident[i_mag2] != 'L' ||  //
-     header.ident[i_mag3] != 'F')    //
-    return false;
-
-  fin.read(reinterpret_cast<char *>(&header.type), sizeof(decltype(header.type)));
-  fin.read(reinterpret_cast<char *>(&header.machine), sizeof(decltype(header.machine)));
-  fin.read(reinterpret_cast<char *>(&header.version), sizeof(decltype(header.version)));
-  fin.read(reinterpret_cast<char *>(&header.entry), sizeof(decltype(header.entry)));
-  fin.read(reinterpret_cast<char *>(&header.phoff), sizeof(decltype(header.phoff)));
-  fin.read(reinterpret_cast<char *>(&header.shoff), sizeof(decltype(header.shoff)));
-  fin.read(reinterpret_cast<char *>(&header.flags), sizeof(decltype(header.flags)));
-
-  fin.read(reinterpret_cast<char *>(&header.ehsize), sizeof(decltype(header.ehsize)));
-  fin.read(reinterpret_cast<char *>(&header.phentsize), sizeof(decltype(header.phentsize)));
-  fin.read(reinterpret_cast<char *>(&header.phnum), sizeof(decltype(header.phnum)));
-
-  fin.read(reinterpret_cast<char *>(&header.shentsize), sizeof(decltype(header.shentsize)));
-  fin.read(reinterpret_cast<char *>(&header.shnum), sizeof(decltype(header.shnum)));
-  fin.read(reinterpret_cast<char *>(&header.shstrndx), sizeof(decltype(header.shstrndx)));
-
-  return true;
-}
-
-std::string_view decode_data(Elf64_header_t &header) noexcept {
-  switch(header.ident[i_data]) {
-  case data::dataNone: return "None";
-  case data::data2lsb: return "2's complement, little endian";
-  case data::data2msb: return "2's complement, big endian";
-  }
-}
-
-std::string_view decode_class(Elf64_header_t &header) noexcept {
-  switch(header.ident[i_class]) {
-  case class_::classNone: return "None";
-  case class_::class32: return "ELF32";
-  case class_::class64: return "ELF64";
-  }
-}
-
-std::string_view decode_file_version(Elf64_header_t &header) noexcept {
-  switch(header.ident[i_version]) {
-  case version::versionNone: return "0 (Invalid)";
-  case version::current: return "1 (Current)";
-  }
-}
-
-std::string_view decode_os_abi(Elf64_header_t &header) noexcept {
-  switch(header.ident[i_osabi]) {
-  case osabi::sysv: return "UNIX System V ABI";
-  case osabi::hpux: return "HP-UX";
-  case osabi::netbsd: return "NetBSD";
-  case osabi::gnu: return "Object uses GNU ELF extensions";
-  // case osabi::linux: return "Compatibility alias";
-  case osabi::solaris: return "Sun Solaris";
-  case osabi::aix: return "IBM AIX";
-  case osabi::irix: return "SGI Irix";
-  case osabi::freebsd: return "FreeBSD";
-  case osabi::tru64: return "Compaq TRU64 UNIX";
-  case osabi::modesto: return "Novell Modesto";
-  case osabi::openbsd: return "OpenBSD";
-  case osabi::arm_aeabi: return "ARM EABI";
-  case osabi::arm_: return "ARM";
-  case osabi::standalone: return "Standalone (embedded) application";
-  }
-}
-
-std::string_view decode_machine(Elf64_header_t &header) noexcept {
-  switch(header.machine) {
-  case machine::machineNone: return "An unknown machine";
-  case machine::m32: return "AT&T WE 32100";
-  case machine::sparc: return "Sun Microsystems SPARC";
-  case machine::_386: return "Intel 80386";
-  case machine::_68k: return "Motorola 68000";
-  case machine::_88k: return "Motorola 88000";
-  case machine::_860: return "Intel 80860";
-  case machine::mips: return "MIPS RS3000 (big-endian only)";
-  case machine::parisc: return "HP/PA";
-  case machine::sparc32plus: return "SPARC with enhanced instruction set";
-  case machine::ppc: return "PowerPC";
-  case machine::ppc64: return "PowerPC 64-bit";
-  case machine::s390: return "IBM S/390";
-  case machine::arm: return "Advanced RISC Machines";
-  case machine::sh: return "Renesas SuperH";
-  case machine::sparcv9: return "SPARC v9 64-bit";
-  case machine::ia_64: return "Intel Itanium";
-  case machine::x86_64: return "AMD x86-64";
-  case machine::vax: return "DEC Vax";
-  }
-}
-
-std::string_view decode_filetype(Elf64_header_t &header) noexcept {
-  switch(header.type) {
-  case type::typeNone: return "No file type";
-  case type::rel: return "Relocatible file";
-  case type::exec: return "Executable file";
-  case type::dyn: return "Shared object file";
-  case type::core: return "Core file";
-  case type::loproc: return "Processor specific";
-  case type::hiproc: return "Processor specific";
-  }
-}
-
 // Legal values for pType (segment type)
 enum pType {
   pNull = 0,                 // program header table entry unused
@@ -438,30 +336,284 @@ enum pType {
   hiproc_ = 0x7fffffff       // end of processor-specific
 };
 
-std::vector<Elf64_Program_Header_t> decode_program_headers(const Elf64_header_t &header,
-                                                           const char *file) noexcept {
-  std::ifstream fin{file, std::ios::binary};
+// Legal values for p_flags (segment flags)
+enum pFlag {
+  x = (1 << 0),             // Segment is executable
+  w = (1 << 1),             // Segment is writable
+  r = (1 << 2),             // Segment is readable
+  rw = (1 << 2) | (1 << 1), // Segment is readable/writable
+  re = (1 << 2) | (1 << 0), // Segment is readable/executable
+  maskOS = 0x0ff00000,      // OS-specific
+  maskProc = 0xf0000000     // Processor-specific
+};
 
-  std::vector<Elf64_Program_Header_t> temp(header.phnum);
-  fin.seekg(header.phoff);
+std::ifstream fin;
 
-  for(auto &ph : temp) {
-    fin.read(reinterpret_cast<char *>(&ph.type), sizeof(decltype(ph.type)));
-    fin.read(reinterpret_cast<char *>(&ph.flags), sizeof(decltype(ph.flags)));
-    fin.read(reinterpret_cast<char *>(&ph.offset), sizeof(decltype(ph.offset)));
-    fin.read(reinterpret_cast<char *>(&ph.vaddr), sizeof(decltype(ph.vaddr)));
-    fin.read(reinterpret_cast<char *>(&ph.paddr), sizeof(decltype(ph.paddr)));
-    fin.read(reinterpret_cast<char *>(&ph.filesz), sizeof(decltype(ph.filesz)));
-    fin.read(reinterpret_cast<char *>(&ph.memsz), sizeof(decltype(ph.memsz)));
-    fin.read(reinterpret_cast<char *>(&ph.align), sizeof(decltype(ph.align)));
-  }
+auto FileHeader::open(const char *file) noexcept -> bool {
+  fin.open(file, std::ios::binary);
 
-  return temp;
+  if(!isELF()) return false;
+
+  if(is64bit()) elf_header = Elf64_Header_t{};
+  else elf_header = Elf32_Header_t{};
+
+  return true;
 }
 
-std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept {
+auto FileHeader::decode() noexcept -> void {
+  fin.seekg(0);
+  if(auto x64 = std::get_if<Elf64_Header_t>(&elf_header)) {
+    fin.read(reinterpret_cast<char *>(&x64->ident), i_nident);
+    fin.read(reinterpret_cast<char *>(&x64->type), sizeof(decltype(x64->type)));
+    fin.read(reinterpret_cast<char *>(&x64->machine), sizeof(decltype(x64->machine)));
+    fin.read(reinterpret_cast<char *>(&x64->version), sizeof(decltype(x64->version)));
+    fin.read(reinterpret_cast<char *>(&x64->entry), sizeof(decltype(x64->entry)));
+    fin.read(reinterpret_cast<char *>(&x64->phoff), sizeof(decltype(x64->phoff)));
+    fin.read(reinterpret_cast<char *>(&x64->shoff), sizeof(decltype(x64->shoff)));
+    fin.read(reinterpret_cast<char *>(&x64->flags), sizeof(decltype(x64->flags)));
+
+    fin.read(reinterpret_cast<char *>(&x64->ehsize), sizeof(decltype(x64->ehsize)));
+    fin.read(reinterpret_cast<char *>(&x64->phentsize), sizeof(decltype(x64->phentsize)));
+    fin.read(reinterpret_cast<char *>(&x64->phnum), sizeof(decltype(x64->phnum)));
+
+    program_headers.resize(x64->phnum);
+    std::ranges::fill(program_headers, Elf64_Program_Header_t{});
+
+    fin.read(reinterpret_cast<char *>(&x64->shentsize), sizeof(decltype(x64->shentsize)));
+    fin.read(reinterpret_cast<char *>(&x64->shnum), sizeof(decltype(x64->shnum)));
+    fin.read(reinterpret_cast<char *>(&x64->shstrndx), sizeof(decltype(x64->shstrndx)));
+  } else {
+    auto x86 = std::get_if<Elf32_Header_t>(&elf_header);
+    fin.read(reinterpret_cast<char *>(&x86->ident), i_nident);
+    fin.read(reinterpret_cast<char *>(&x86->type), sizeof(decltype(x86->type)));
+    fin.read(reinterpret_cast<char *>(&x86->machine), sizeof(decltype(x86->machine)));
+    fin.read(reinterpret_cast<char *>(&x86->version), sizeof(decltype(x86->version)));
+    fin.read(reinterpret_cast<char *>(&x86->entry), sizeof(decltype(x86->entry)));
+    fin.read(reinterpret_cast<char *>(&x86->phoff), sizeof(decltype(x86->phoff)));
+    fin.read(reinterpret_cast<char *>(&x86->shoff), sizeof(decltype(x86->shoff)));
+    fin.read(reinterpret_cast<char *>(&x86->flags), sizeof(decltype(x86->flags)));
+
+    fin.read(reinterpret_cast<char *>(&x86->ehsize), sizeof(decltype(x86->ehsize)));
+    fin.read(reinterpret_cast<char *>(&x86->phentsize), sizeof(decltype(x86->phentsize)));
+    fin.read(reinterpret_cast<char *>(&x86->phnum), sizeof(decltype(x86->phnum)));
+
+    program_headers.resize(x86->phnum);
+    std::ranges::fill(program_headers, Elf32_Program_Header_t{});
+
+    fin.read(reinterpret_cast<char *>(&x86->shentsize), sizeof(decltype(x86->shentsize)));
+    fin.read(reinterpret_cast<char *>(&x86->shnum), sizeof(decltype(x86->shnum)));
+    fin.read(reinterpret_cast<char *>(&x86->shstrndx), sizeof(decltype(x86->shstrndx)));
+  }
+}
+
+auto FileHeader::identificationArray() noexcept -> std::span<Elf_byte> const {
+  if(auto x64 = std::get_if<Elf64_Header_t>(&elf_header)) //
+    return x64->ident;
+  return std::get<Elf32_Header_t>(elf_header).ident;
+}
+
+auto FileHeader::fileClass() noexcept -> std::string_view const {
+  auto classData = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_class]; },
+                                         [](const Elf64_Header_t &x64) { return x64.ident[i_class]; }},
+                              elf_header);
+
+  switch(classData) {
+  case class_::classNone: return "None";
+  case class_::class32: return "ELF32";
+  case class_::class64: return "ELF64";
+  }
+}
+
+auto FileHeader::fileDataEncoding() noexcept -> std::string_view const {
+  auto encodingData = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_data]; },
+                                            [](const Elf64_Header_t &x64) { return x64.ident[i_data]; }},
+                                 elf_header);
+
+  switch(encodingData) {
+  case data::dataNone: return "None";
+  case data::data2lsb: return "2's complement, little endian";
+  case data::data2msb: return "2's complement, big endian";
+  }
+}
+
+auto FileHeader::fileVersion() noexcept -> std::string_view const {
+  auto versionData = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_version]; },
+                                           [](const Elf64_Header_t &x64) { return x64.ident[i_version]; }},
+                                elf_header);
+
+  switch(versionData) {
+  case version::versionNone: return "0 (Invalid)";
+  case version::current: return "1 (Current)";
+  }
+}
+
+auto FileHeader::osABI() noexcept -> std::string_view const {
+  auto osABI = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_osabi]; },
+                                     [](const Elf64_Header_t &x64) { return x64.ident[i_osabi]; }},
+                          elf_header);
+  switch(osABI) {
+  case osabi::sysv: return "UNIX System V ABI";
+  case osabi::hpux: return "HP-UX";
+  case osabi::netbsd: return "NetBSD";
+  case osabi::gnu: return "Object uses GNU ELF extensions";
+  // case osabi::linux: return "Compatibility alias";
+  case osabi::solaris: return "Sun Solaris";
+  case osabi::aix: return "IBM AIX";
+  case osabi::irix: return "SGI Irix";
+  case osabi::freebsd: return "FreeBSD";
+  case osabi::tru64: return "Compaq TRU64 UNIX";
+  case osabi::modesto: return "Novell Modesto";
+  case osabi::openbsd: return "OpenBSD";
+  case osabi::arm_aeabi: return "ARM EABI";
+  case osabi::arm_: return "ARM";
+  case osabi::standalone: return "Standalone (embedded) application";
+  }
+}
+
+auto FileHeader::ABIVersion() noexcept -> int {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_abiversion]; },
+                               [](const Elf64_Header_t &x64) { return x64.ident[i_abiversion]; }},
+                    elf_header);
+}
+
+auto FileHeader::type() noexcept -> std::string_view const {
+  auto fileType = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.type; },
+                                        [](const Elf64_Header_t &x64) { return x64.type; }},
+                             elf_header);
+
+  switch(fileType) {
+  case type::typeNone: return "No file type";
+  case type::rel: return "Relocatible file";
+  case type::exec: return "Executable file";
+  case type::dyn: return "Shared object file";
+  case type::core: return "Core file";
+  case type::loproc: return "Processor specific";
+  case type::hiproc: return "Processor specific";
+  }
+}
+
+auto FileHeader::machine() noexcept -> std::string_view const {
+  auto machine = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.machine; },
+                                       [](const Elf64_Header_t &x64) { return x64.machine; }},
+                            elf_header);
+  switch(machine) {
+  case machine::machineNone: return "An unknown machine";
+  case machine::m32: return "AT&T WE 32100";
+  case machine::sparc: return "Sun Microsystems SPARC";
+  case machine::_386: return "Intel 80386";
+  case machine::_68k: return "Motorola 68000";
+  case machine::_88k: return "Motorola 88000";
+  case machine::_860: return "Intel 80860";
+  case machine::mips: return "MIPS RS3000 (big-endian only)";
+  case machine::parisc: return "HP/PA";
+  case machine::sparc32plus: return "SPARC with enhanced instruction set";
+  case machine::ppc: return "PowerPC";
+  case machine::ppc64: return "PowerPC 64-bit";
+  case machine::s390: return "IBM S/390";
+  case machine::arm: return "Advanced RISC Machines";
+  case machine::sh: return "Renesas SuperH";
+  case machine::sparcv9: return "SPARC v9 64-bit";
+  case machine::ia_64: return "Intel Itanium";
+  case machine::x86_64: return "AMD x86-64";
+  case machine::vax: return "DEC Vax";
+  }
+}
+
+auto FileHeader::version() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.version; },
+                               [](const Elf64_Header_t &x64) { return x64.version; }},
+                    elf_header);
+}
+
+auto FileHeader::entryPoint() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.entry; },
+                               [](const Elf64_Header_t &x64) -> int { return x64.entry; }},
+                    elf_header);
+}
+
+auto FileHeader::programHeaderOffset() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.phoff; },
+                               [](const Elf64_Header_t &x64) -> int { return x64.phoff; }},
+                    elf_header);
+}
+
+auto FileHeader::sectionHeaderOffset() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.shoff; },
+                               [](const Elf64_Header_t &x64) -> int { return x64.shoff; }},
+                    elf_header);
+}
+
+auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & {
+  fin.seekg(programHeaderOffset());
+
+  for(auto &ph : program_headers) {
+    std::visit(overloaded{[](Elf32_Program_Header_t &x86) {
+                            fin.read(reinterpret_cast<char *>(&x86.type), sizeof(decltype(x86.type)));
+                            fin.read(reinterpret_cast<char *>(&x86.flags), sizeof(decltype(x86.flags)));
+                            fin.read(reinterpret_cast<char *>(&x86.offset), sizeof(decltype(x86.offset)));
+                            fin.read(reinterpret_cast<char *>(&x86.vaddr), sizeof(decltype(x86.vaddr)));
+                            fin.read(reinterpret_cast<char *>(&x86.paddr), sizeof(decltype(x86.paddr)));
+                            fin.read(reinterpret_cast<char *>(&x86.filesz), sizeof(decltype(x86.filesz)));
+                            fin.read(reinterpret_cast<char *>(&x86.memsz), sizeof(decltype(x86.memsz)));
+                            fin.read(reinterpret_cast<char *>(&x86.align), sizeof(decltype(x86.align)));
+                          }, //
+                          [](Elf64_Program_Header_t &x64) {
+                            fin.read(reinterpret_cast<char *>(&x64.type), sizeof(decltype(x64.type)));
+                            fin.read(reinterpret_cast<char *>(&x64.flags), sizeof(decltype(x64.flags)));
+                            fin.read(reinterpret_cast<char *>(&x64.offset), sizeof(decltype(x64.offset)));
+                            fin.read(reinterpret_cast<char *>(&x64.vaddr), sizeof(decltype(x64.vaddr)));
+                            fin.read(reinterpret_cast<char *>(&x64.paddr), sizeof(decltype(x64.paddr)));
+                            fin.read(reinterpret_cast<char *>(&x64.filesz), sizeof(decltype(x64.filesz)));
+                            fin.read(reinterpret_cast<char *>(&x64.memsz), sizeof(decltype(x64.memsz)));
+                            fin.read(reinterpret_cast<char *>(&x64.align), sizeof(decltype(x64.align)));
+                          }},
+               ph);
+  }
+
+  return program_headers;
+}
+
+auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & {
+  fin.seekg(sectionHeaderOffset());
+  section_headers.resize(numSectionHeaders());
+
+  for(auto &sh : section_headers) {
+    if(auto x64 = std::get_if<Elf64_Section_Header_t>(&sh)) {
+      fin.read(reinterpret_cast<char *>(&x64->name), sizeof(decltype(x64->name)));
+      fin.read(reinterpret_cast<char *>(&x64->type), sizeof(decltype(x64->type)));
+      fin.read(reinterpret_cast<char *>(&x64->flags), sizeof(decltype(x64->flags)));
+      fin.read(reinterpret_cast<char *>(&x64->addr), sizeof(decltype(x64->addr)));
+      fin.read(reinterpret_cast<char *>(&x64->offset), sizeof(decltype(x64->offset)));
+      fin.read(reinterpret_cast<char *>(&x64->size), sizeof(decltype(x64->size)));
+      fin.read(reinterpret_cast<char *>(&x64->link), sizeof(decltype(x64->link)));
+      fin.read(reinterpret_cast<char *>(&x64->info), sizeof(decltype(x64->info)));
+      fin.read(reinterpret_cast<char *>(&x64->addralign), sizeof(decltype(x64->addralign)));
+      fin.read(reinterpret_cast<char *>(&x64->entsize), sizeof(decltype(x64->entsize)));
+    } else {
+      auto x86 = std::get<Elf32_Section_Header_t>(sh);
+      fin.read(reinterpret_cast<char *>(&x86.name), sizeof(decltype(x86.name)));
+      fin.read(reinterpret_cast<char *>(&x86.type), sizeof(decltype(x86.type)));
+      fin.read(reinterpret_cast<char *>(&x86.flags), sizeof(decltype(x86.flags)));
+      fin.read(reinterpret_cast<char *>(&x86.addr), sizeof(decltype(x86.addr)));
+      fin.read(reinterpret_cast<char *>(&x86.offset), sizeof(decltype(x86.offset)));
+      fin.read(reinterpret_cast<char *>(&x86.size), sizeof(decltype(x86.size)));
+      fin.read(reinterpret_cast<char *>(&x86.link), sizeof(decltype(x86.link)));
+      fin.read(reinterpret_cast<char *>(&x86.info), sizeof(decltype(x86.info)));
+      fin.read(reinterpret_cast<char *>(&x86.addralign), sizeof(decltype(x86.addralign)));
+      fin.read(reinterpret_cast<char *>(&x86.entsize), sizeof(decltype(x86.entsize)));
+    }
+  }
+
+  return section_headers;
+}
+
+auto FileHeader::programHeaderType(const Program_Header_t &ph) noexcept -> std::string_view const {
+
+  auto phType = std::visit(overloaded{[](const Elf32_Program_Header_t &x32) { return x32.type; },
+                                      [](const Elf64_Program_Header_t &x64) { return x64.type; }},
+                           ph);
   // clang-format off
-  switch(pHeader.type) {
+  switch(phType) {
   case pType::pNull:        return "NULL";
   case pType::load:         return "LOAD";
   case pType::dynamic:      return "DYNAMIC";
@@ -483,6 +635,98 @@ std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeade
   case pType::loproc_:      return "LOPROC";
   case pType::hiproc_:      return "HIPROC";
   }
+  // clang-format on
 }
 
+[[nodiscard]] auto FileHeader::programHeaderFlag(const Program_Header_t &ph) noexcept
+    -> std::string_view const {
+
+  auto phFlag = std::visit(overloaded{[](const Elf32_Program_Header_t &x32) { return x32.flags; },
+                                      [](const Elf64_Program_Header_t &x64) { return x64.flags; }},
+                           ph);
+
+  switch(phFlag) {
+  case pFlag::x: return "X";
+  case pFlag::w: return "W";
+  case pFlag::r: return "R";
+  case pFlag::rw: return "RW";
+  case pFlag::re: return "R E";
+  case pFlag::maskOS: return "MASKOS";
+  case pFlag::maskProc: return "MASKProc";
+  default: return "unknown";
+  }
 }
+
+auto FileHeader::flags() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.flags; },
+                               [](const Elf32_Header_t &x32) { return x32.flags; }},
+                    elf_header);
+}
+
+auto FileHeader::headerSize() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.ehsize; },
+                               [](const Elf32_Header_t &x32) { return x32.ehsize; }},
+                    elf_header);
+}
+
+auto FileHeader::programHeaderSize() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phentsize; },
+                               [](const Elf32_Header_t &x32) { return x32.phentsize; }},
+                    elf_header);
+}
+
+auto FileHeader::numProgramHeaders() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phnum; },
+                               [](const Elf32_Header_t &x32) { return x32.phnum; }},
+                    elf_header);
+}
+
+auto FileHeader::sectionHeaderSize() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shentsize; },
+                               [](const Elf32_Header_t &x32) { return x32.shentsize; }},
+                    elf_header);
+}
+
+auto FileHeader::numSectionHeaders() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shnum; },
+                               [](const Elf32_Header_t &x32) { return x32.shnum; }},
+                    elf_header);
+}
+
+auto FileHeader::sectionHeaderStringTable() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shstrndx; },
+                               [](const Elf32_Header_t &x32) { return x32.shstrndx; }},
+                    elf_header);
+}
+
+auto FileHeader::hasProgramHeaders() noexcept -> bool const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phoff == 0; },
+                               [](const Elf32_Header_t &x32) { return x32.phoff == 0; }},
+                    elf_header);
+}
+
+auto FileHeader::hasSectionHeaders() noexcept -> bool const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shoff == 0; },
+                               [](const Elf32_Header_t &x32) { return x32.shoff == 0; }},
+                    elf_header);
+}
+
+constexpr Elf_byte identification_bytes[]{0x7f, 'E', 'L', 'F'};
+
+auto FileHeader::isELF() noexcept -> bool const {
+  fin.seekg(0);
+
+  Elf_byte temp[4]{};
+  fin.read(reinterpret_cast<char *>(temp), std::size(temp) * sizeof(Elf_byte));
+
+  return std::ranges::equal(temp, identification_bytes);
+}
+
+auto FileHeader::is64bit() noexcept -> bool const {
+  fin.seekg(4);
+  Elf_byte temp;
+  fin.read(reinterpret_cast<char *>(&temp), sizeof(Elf_byte));
+  return temp == class_::class64;
+}
+
+} // namespace readelf
