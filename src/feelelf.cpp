@@ -550,19 +550,8 @@ auto FileHeader::sectionHeaderOffset() noexcept -> int const {
 auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & {
   fin.seekg(programHeaderOffset());
 
-struct El{
-  Elf64_Word type;
-  Elf64_Word flags;
-  Elf64_Off offset;
-  Elf64_Addr vaddr;
-  Elf64_Addr paddr;
-  Elf64_Xword filesz;
-  Elf64_Xword memsz;
-  Elf64_Xword align;
-};
-
   for(auto &ph : program_headers) {
-    std::visit( //
+    std::visit(
       overloaded{
         [](Elf32_Program_Header_t &x86) {
              fin.read(reinterpret_cast<char *>(&x86.type), sizeof(decltype(x86.type)));
