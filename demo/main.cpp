@@ -80,35 +80,48 @@ int main(int argc, const char *argv[]) {
                    header.programHeaderOffset());
       }
       fmt::print("Program Headers:\n");
+      if(!header.programHeaders().empty()) {
 
-      fmt::print("{:^14} {:^16} {:^16} {:^16} {:^16} {:^16} {:^8} {:<8}\n", "Type", "Offset", "FileSize",
-                 "VirtAddr", "MemSize", "PhysAddr", "Flags", "Align");
+        if(std::holds_alternative<feelelf::Elf64_Program_Header_t>(header.programHeaders()[0])) {
 
-      for(const auto &o : header.programHeaders()) {
-        if(auto x64 = std::get_if<feelelf::Elf64_Program_Header_t>(&o))
-          fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<16} {:#016x}\n",
-                     header.programHeaderType(o), //
-                     x64->offset,                 //
-                     x64->filesz,                 //
-                     x64->vaddr,                  //
-                     x64->memsz,                  //
-                     x64->paddr,                  //
-                     header.programHeaderFlag(o), //
-                     x64->align);
+          fmt::print("{:^14} {:^16} {:^16} {:^16} {:^16} {:^16} {:<7} {:<8}\n", "Type", "Offset", "VirtAddr",
+                     "PhysAddr", "FileSize", "MemSize", "Flags", "Align");
 
-        else if(auto x86 = std::get_if<feelelf::Elf32_Program_Header_t>(&o))
-          fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<16} {:#016x}\n",
-                     header.programHeaderType(o), //
-                     x86->offset,                 //
-                     x86->filesz,                 //
-                     x86->vaddr,                  //
-                     x86->memsz,                  //
-                     x86->paddr,                  //
-                     header.programHeaderFlag(o), //
-                     x86->align);
+          for(const auto &o : header.programHeaders()) {
+            auto x64 = std::get<feelelf::Elf64_Program_Header_t>(o);
+            fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<7} {:#0x}\n",
+                       header.programHeaderType(o), //
+                       x64.offset,                  //
+                       x64.vaddr,                   //
+                       x64.paddr,                   //
+                       x64.filesz,                  //
+                       x64.memsz,                   //
+                       header.programHeaderFlag(o), //
+                       x64.align);
+          }
+        }
+
+        else {
+
+          fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr",
+                     "PhysAddr", "FileSiz", "MemSiz", "Flags", "Align");
+
+          for(const auto &o : header.programHeaders()) {
+            auto x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
+            fmt::print("{:<14} {:#08x} {:#010x} {:#010x} {:#07x} {:#07x} {:<6} {:#0x}\n",
+                       header.programHeaderType(o), //
+                       x86.offset,                  //
+                       x86.vaddr,                   //
+                       x86.paddr,                   //
+                       x86.filesz,                  //
+                       x86.memsz,                   //
+                       header.programHeaderFlag(o), //
+                       x86.align);
+          }
+        }
       }
     }
-
-    if(show_version) fmt::print("feelelf 0.0.1\n");
   }
+
+  if(show_version) fmt::print("feelelf 0.0.1\n");
 }
