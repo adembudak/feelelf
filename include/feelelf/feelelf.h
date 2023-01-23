@@ -183,6 +183,4 @@ static_assert(std::copyable<FileHeader>);
 static_assert(std::movable<FileHeader>);
 static_assert(std::semiregular<FileHeader>);
 
-std::string_view decode_program_header_type(const Elf64_Program_Header_t &pHeader) noexcept;
-
 } // naemspace feelelf
