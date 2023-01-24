@@ -105,29 +105,29 @@ struct Elf64_Program_Header_t {
 using Program_Header_t = std::variant<Elf32_Program_Header_t, Elf64_Program_Header_t>;
 
 struct Elf32_Section_Header_t {
-  Elf32_Word name;
-  Elf32_Word type;
-  Elf32_Word flags;
-  Elf32_Addr addr;
-  Elf32_Off offset;
-  Elf32_Word size;
-  Elf32_Word link;
-  Elf32_Word info;
-  Elf32_Word addralign;
-  Elf32_Word entsize;
+  Elf32_Word name;      // section name (string table index)
+  Elf32_Word type;      // section type
+  Elf32_Word flags;     // section flags
+  Elf32_Addr addr;      // section virtual addr at execution
+  Elf32_Off offset;     // section file offset
+  Elf32_Word size;      // section size in bytes
+  Elf32_Word link;      // link to another section
+  Elf32_Word info;      // additional section information
+  Elf32_Word addralign; // section alignment
+  Elf32_Word entsize;   // entry size if section holds table
 };
 
 struct Elf64_Section_Header_t {
   Elf64_Word name;
   Elf64_Word type;
-  Elf64_Word flags;
+  Elf64_Xword flags;
   Elf64_Addr addr;
   Elf64_Off offset;
-  Elf64_Word size;
+  Elf64_Xword size;
   Elf64_Word link;
   Elf64_Word info;
-  Elf64_Word addralign;
-  Elf64_Word entsize;
+  Elf64_Xword addralign;
+  Elf64_Xword entsize;
 };
 using Section_Header_t = std::variant<Elf32_Section_Header_t, Elf64_Section_Header_t>;
 
@@ -170,7 +170,6 @@ public:
   [[nodiscard]] auto sectionHeaderSize() noexcept -> int const;
   [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
   [[nodiscard]] auto sectionHeaderStringTable() noexcept -> int const;
-
 
 private:
   [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;
