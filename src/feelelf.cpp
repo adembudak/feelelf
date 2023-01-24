@@ -383,6 +383,9 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&x32.shentsize), sizeof(decltype(x32.shentsize)));
             fin.read(reinterpret_cast<char *>(&x32.shnum), sizeof(decltype(x32.shnum)));
             fin.read(reinterpret_cast<char *>(&x32.shstrndx), sizeof(decltype(x32.shstrndx)));
+
+            section_headers.resize(x32.shnum);
+            std::ranges::fill(section_headers, Elf32_Section_Header_t{});
       },
       [&](Elf64_Header_t &x64) {
             fin.read(reinterpret_cast<char *>(&x64.ident), i_nident);
@@ -404,6 +407,9 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&x64.shentsize), sizeof(decltype(x64.shentsize)));
             fin.read(reinterpret_cast<char *>(&x64.shnum), sizeof(decltype(x64.shnum)));
             fin.read(reinterpret_cast<char *>(&x64.shstrndx), sizeof(decltype(x64.shstrndx)));
+
+            section_headers.resize(x64.shnum);
+            std::ranges::fill(section_headers, Elf64_Section_Header_t{});
       }
     }, elf_header);
   // clang-format on
@@ -582,7 +588,6 @@ auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & 
 
 auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & {
   fin.seekg(sectionHeaderOffset());
-  section_headers.resize(numSectionHeaders());
 
   for(auto &sh : section_headers) {
     std::visit(
