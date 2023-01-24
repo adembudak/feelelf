@@ -14,6 +14,7 @@ int main(int argc, const char *argv[]) {
 
   bool show_header = false;
   bool show_segments = false;
+  bool show_sections = false;
 
   bool show_help = false;
   bool show_version = false;
@@ -22,6 +23,7 @@ int main(int argc, const char *argv[]) {
   try {
     app.add_flag("-H,--file-header", show_header, "Display the ELF file header");
     app.add_flag("-l,--program-headers,--segments", show_segments, "Display the ELF file header");
+    app.add_flag("-S,--section-headers,--sections", show_sections, "Display the sections' header");
     app.add_option("elf-files", files);
 
     app.add_flag("-v,--version", show_version, "Display version number of feelelf");
