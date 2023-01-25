@@ -171,6 +171,8 @@ public:
   [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
   [[nodiscard]] auto sectionHeaderStringTable() noexcept -> int const;
 
+  [[nodiscard]] auto sectionHeaderType(const std::size_t i) noexcept -> std::string_view const;
+
 private:
   [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;
   [[nodiscard]] auto hasSectionHeaders() noexcept -> bool const;

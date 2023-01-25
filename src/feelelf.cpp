@@ -735,4 +735,47 @@ auto FileHeader::is64bit() noexcept -> bool const {
   return temp == class_::class64;
 }
 
+// Legal values for sh_type (section type).
+auto FileHeader::sectionHeaderType(const std::size_t i) noexcept -> std::string_view const {
+  // clang-format off
+  switch(i) {
+  case 0:          return "NULL";           // Section header table entry unused
+  case 1:          return "PROGBITS";       // Program data
+  case 2:          return "SYMTAB";         // Symbol table
+  case 3:          return "STRTAB";         // String table
+  case 4:          return "RELA";           // Relocation entries with addends
+  case 5:          return "HASH";           // Symbol hash table
+  case 6:          return "DYNAMIC";        // Dynamic linking information
+  case 7:          return "NOTE";           // Notes
+  case 8:          return "NOBITS";         // Program space with no data (bss)
+  case 9:          return "REL";            // Relocation entries, no addends
+  case 10:         return "SHLIB";          // Reserved
+  case 11:         return "DYNSYM";         // Dynamic linker symbol table
+  case 14:         return "INIT_ARRAY";     // Array of constructors
+  case 15:         return "FINI_ARRAY";     // Array of destructors
+  case 16:         return "PREINIT_ARRAY";  // Array of pre-constructors
+  case 17:         return "GROUP";          // Section group
+  case 18:         return "SYMTAB_SHNDX";   // Extended section indeces
+  case 19:         return "NUM";            // Number of defined types.
+  case 0x60000000: return "LOOS";           // Start OS-specific.
+  case 0x6ffffff5: return "GNU_ATTRIBUTES"; // Object attributes.
+  case 0x6ffffff6: return "GNU_HASH";       // GNU-style hash table.
+  case 0x6ffffff7: return "GNU_LIBLIST";    // Prelink library list
+  case 0x6ffffff8: return "CHECKSUM";       // Checksum for DSO content.
+  case 0x6ffffffa: return "LOSUNW";         // Sun-specific low bound.
+//case 0x6ffffffa: return "SUNW_move";      //
+  case 0x6ffffffb: return "SUNW_COMDAT";    //
+  case 0x6ffffffc: return "SUNW_syminfo";   //
+  case 0x6ffffffd: return "GNU_verdef";     // Version definition section.
+  case 0x6ffffffe: return "GNU_verneed";    // Version needs section.
+  case 0x6fffffff: return "GNU_versym";     // Version symbol table.
+//case 0x6fffffff: return "HISUNW";         // Sun-specific high bound.
+//case 0x6fffffff: return "HIOS";           // End OS-specific type
+  case 0x70000000: return "LOPROC";         // Start of processor-specific
+  case 0x7fffffff: return "HIPROC";         // End of processor-specific
+  case 0x80000000: return "LOUSER";         // Start of application-specific
+  case 0x8fffffff: return "HIUSER";         // End of application-specific
+  }
+}
+
 } // namespace readelf
