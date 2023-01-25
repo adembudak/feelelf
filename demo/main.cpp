@@ -15,18 +15,17 @@ int main(int argc, const char *argv[]) {
   bool show_header = false;
   bool show_segments = false;
   bool show_sections = false;
-
-  bool show_help = false;
   bool show_version = false;
 
   CLI::App app{{}, "FeelELF"};
   try {
-    app.add_flag("-H,--file-header", show_header, "Display the ELF file header");
+    app.set_help_flag("-H, --help", "Display this information");
+    app.add_flag("-v,--version", show_version, "Display version number of feelelf");
+
+    app.add_flag("-h,--file-header", show_header, "Display the ELF file header");
     app.add_flag("-l,--program-headers,--segments", show_segments, "Display the ELF file header");
     app.add_flag("-S,--section-headers,--sections", show_sections, "Display the sections' header");
     app.add_option("elf-files", files);
-
-    app.add_flag("-v,--version", show_version, "Display version number of feelelf");
 
     app.parse(argc, argv);
   }
