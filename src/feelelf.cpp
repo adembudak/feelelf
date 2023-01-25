@@ -13,53 +13,6 @@ template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 // clang-format on
 
-// elements of Elf64_header_t.e_ident array
-enum class_ : std::size_t {
-  classNone = 0, // Invalid class
-  class32 = 1,   // 32-bit objects, machines with virtual address spaces up to 4Gb
-  class64 = 2    // 64-bit objects
-};
-
-enum data : std::size_t {
-  dataNone = 0, // Invalid data encoding
-  data2lsb = 1, // 2's complement little endian: 0x0102 -> 0x02 0x01
-  data2msb = 2  // 2's complement big endian   : 0x0102 -> 0x01 0x02
-};
-
-enum version : Elf64_Word { // file version
-  versionNone = 0,          // Invalid version
-  current = 1               // Current version
-};
-
-enum osabi {
-  osNone = 0,      // UNIX System V ABI
-  sysv = 0,        // Alias
-  hpux = 1,        // HP-UX
-  netbsd = 2,      // NetBSD
-  gnu = 3,         // Object uses GNU ELF extensions
-  linux = 3,       // Compatibility alias
-  solaris = 6,     // Sun Solaris
-  aix = 7,         // IBM AIX
-  irix = 8,        // SGI Irix
-  freebsd = 9,     // FreeBSD
-  tru64 = 10,      // Compaq TRU64 UNIX
-  modesto = 11,    // Novell Modesto
-  openbsd = 12,    // OpenBSD
-  arm_aeabi = 64,  // ARM EABI
-  arm_ = 97,       // ARM
-  standalone = 255 // Standalone (embedded) application
-};
-
-enum type : Elf64_Half {
-  typeNone = 0,    // No file type
-  rel = 1,         // Relocatible file
-  exec = 2,        // Executable file
-  dyn = 3,         // Shared object file
-  core = 4,        // Core file
-  loproc = 0xff00, // Processor specific
-  hiproc = 0xffff  // Processor specific
-};
-
 enum machine : Elf64_Half {
   machineNone = 0,     // No machine
   m32 = 1,             // AT&T WE 32100
@@ -425,11 +378,10 @@ auto FileHeader::fileClass() noexcept -> std::string_view const {
   auto classData = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.ident[i_class]; },
                                          [](const Elf64_Header_t &x64) { return x64.ident[i_class]; }},
                               elf_header);
-
   switch(classData) {
-  case class_::classNone: return "None";
-  case class_::class32: return "ELF32";
-  case class_::class64: return "ELF64";
+  case 0: return "None";  // Invalid class
+  case 1: return "ELF32"; // 32-bit objects, machines with virtual address spaces up to 4Gb
+  case 2: return "ELF64"; // 64-bit objects
   }
 }
 
@@ -439,9 +391,9 @@ auto FileHeader::fileDataEncoding() noexcept -> std::string_view const {
                                  elf_header);
 
   switch(encodingData) {
-  case data::dataNone: return "None";
-  case data::data2lsb: return "2's complement, little endian";
-  case data::data2msb: return "2's complement, big endian";
+  case 0: return "None";
+  case 1: return "2's complement, little endian"; // 0x0102 -> 0x02 0x01
+  case 2: return "2's complement, big endian";    // 0x0102 -> 0x01 0x02
   }
 }
 
@@ -451,8 +403,8 @@ auto FileHeader::fileVersion() noexcept -> std::string_view const {
                                 elf_header);
 
   switch(versionData) {
-  case version::versionNone: return "0 (Invalid)";
-  case version::current: return "1 (Current)";
+  case 0: return "0 (Invalid)";
+  case 1: return "1 (Current)";
   }
 }
 
@@ -461,21 +413,21 @@ auto FileHeader::osABI() noexcept -> std::string_view const {
                                      [](const Elf64_Header_t &x64) { return x64.ident[i_osabi]; }},
                           elf_header);
   switch(osABI) {
-  case osabi::sysv: return "UNIX System V ABI";
-  case osabi::hpux: return "HP-UX";
-  case osabi::netbsd: return "NetBSD";
-  case osabi::gnu: return "Object uses GNU ELF extensions";
+  case 0: return "UNIX System V ABI";
+  case 1: return "HP-UX";
+  case 2: return "NetBSD";
+  case 3: return "Object uses GNU ELF extensions";
   // case osabi::linux: return "Compatibility alias";
-  case osabi::solaris: return "Sun Solaris";
-  case osabi::aix: return "IBM AIX";
-  case osabi::irix: return "SGI Irix";
-  case osabi::freebsd: return "FreeBSD";
-  case osabi::tru64: return "Compaq TRU64 UNIX";
-  case osabi::modesto: return "Novell Modesto";
-  case osabi::openbsd: return "OpenBSD";
-  case osabi::arm_aeabi: return "ARM EABI";
-  case osabi::arm_: return "ARM";
-  case osabi::standalone: return "Standalone (embedded) application";
+  case 6: return "Sun Solaris";
+  case 7: return "IBM AIX";
+  case 8: return "SGI Irix";
+  case 9: return "FreeBSD";
+  case 10: return "Compaq TRU64 UNIX";
+  case 11: return "Novell Modesto";
+  case 12: return "OpenBSD";
+  case 64: return "ARM EABI";
+  case 97: return "ARM";
+  case 255: return "Standalone (embedded) application";
   }
 }
 
@@ -489,15 +441,14 @@ auto FileHeader::type() noexcept -> std::string_view const {
   auto fileType = std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.type; },
                                         [](const Elf64_Header_t &x64) { return x64.type; }},
                              elf_header);
-
   switch(fileType) {
-  case type::typeNone: return "No file type";
-  case type::rel: return "Relocatible file";
-  case type::exec: return "Executable file";
-  case type::dyn: return "Shared object file";
-  case type::core: return "Core file";
-  case type::loproc: return "Processor specific";
-  case type::hiproc: return "Processor specific";
+  case 0: return "No file type";
+  case 1: return "Relocatible file";
+  case 2: return "Executable file";
+  case 3: return "Shared object file";
+  case 4: return "Core file";
+  case 0xff00: return "Processor specific";
+  case 0xffff: return "Processor specific";
   }
 }
 
@@ -626,28 +577,28 @@ auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & 
 auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_view const {
   // clang-format off
   switch(i) {
-  case pType::pNull:        return "NULL";
-  case pType::load:         return "LOAD";
-  case pType::dynamic:      return "DYNAMIC";
-  case pType::interp:       return "INTERP";
-  case pType::note:         return "NOTE";
-  case pType::shlib:        return "SHLIB";
-  case pType::phdr:         return "PHDR";
-  case pType::tls:          return "TLS";
-  case pType::num_:         return "NUM";
-  case pType::loos:         return "LOOS";
-  case pType::gnu_eh_frame: return "GNU_EH_FRAME";
-  case pType::gnu_stack:    return "GNU_STACK";
-  case pType::gnu_relro:    return "GNU_RELRO";
-  case pType::losunw:       return "LOSUNW";
-//case pType::sunwbss:      return "SUNWBSS";
-  case pType::sunwstack:    return "SUNWSTACK";
-//case pType::hisunw:       return "HISUNW";
-  case pType::hios:         return "HIOS";
-  case pType::loproc_:      return "LOPROC";
-  case pType::hiproc_:      return "HIPROC";
+  case 0: return "NULL";                  // program header table entry
+  case 1: return "LOAD";                  // loadable program segment
+  case 2: return "DYNAMIC";               // dynamic linking informatio
+  case 3: return "INTERP";                // program interpreter
+  case 4: return "NOTE";                  // auxiliary information
+  case 5: return "SHLIB";                 // reserved
+  case 6: return "PHDR";                  // entry for header table its
+  case 7: return "TLS";                   // thread-local storage segme
+  case 8: return "NUM";                   // number of defined types
+  case 0x60000000: return "LOOS";         // start of OS-specific
+  case 0x6474e550: return "GNU_EH_FRAME"; // GCC .eh_frame_hdr segment
+  case 0x6474e551: return "GNU_STACK";    // indicates stack executabil
+  case 0x6474e552: return "GNU_RELRO";    // read-only after relocation
+  // case 0x6ffffffa: return "LOSUNW";    //
+  case 0x6ffffffa: return "SUNWBSS";      // Sun Specific segment
+  case 0x6ffffffb: return "SUNWSTACK";    // stack segment
+  //case 0x6fffffff: return "HISUNW";     //
+  case 0x6FFfffff: return "HIOS";         // end of OS-specific
+  case 0x70000000: return "LOPROC";       // start of processor-specifi
+  case 0x7fffffff: return "HIPROC";       // end of processor-specific
   }
-  // clang-format on
+  // clang-format off
 }
 
 [[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t i) noexcept -> std::string_view const {
@@ -732,7 +683,7 @@ auto FileHeader::is64bit() noexcept -> bool const {
   fin.seekg(4);
   Elf_byte temp;
   fin.read(reinterpret_cast<char *>(&temp), sizeof(Elf_byte));
-  return temp == class_::class64;
+  return temp == 2;
 }
 
 // Legal values for sh_type (section type).
