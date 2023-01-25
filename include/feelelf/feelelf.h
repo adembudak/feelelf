@@ -158,8 +158,8 @@ public:
   [[nodiscard]] auto programHeaders()    noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders()    noexcept -> const decltype(section_headers) &;
 
-  [[nodiscard]] auto programHeaderType(const Program_Header_t& ph) noexcept -> std::string_view const ;
-  [[nodiscard]] auto programHeaderFlag(const Program_Header_t& ph) noexcept -> std::string_view const ;
+  [[nodiscard]] auto programHeaderType(const std::size_t i) noexcept -> std::string_view const;
+  [[nodiscard]] auto programHeaderFlag(const std::size_t i) noexcept -> std::string_view const;
 
   [[nodiscard]] auto flags()             noexcept -> int const;
   [[nodiscard]] auto headerSize()        noexcept -> int const;

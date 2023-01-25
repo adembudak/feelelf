@@ -623,13 +623,9 @@ auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & 
 }
 // clang-format on
 
-auto FileHeader::programHeaderType(const Program_Header_t &ph) noexcept -> std::string_view const {
-
-  auto phType = std::visit(overloaded{[](const Elf32_Program_Header_t &x32) { return x32.type; },
-                                      [](const Elf64_Program_Header_t &x64) { return x64.type; }},
-                           ph);
+auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_view const {
   // clang-format off
-  switch(phType) {
+  switch(i) {
   case pType::pNull:        return "NULL";
   case pType::load:         return "LOAD";
   case pType::dynamic:      return "DYNAMIC";
@@ -654,14 +650,8 @@ auto FileHeader::programHeaderType(const Program_Header_t &ph) noexcept -> std::
   // clang-format on
 }
 
-[[nodiscard]] auto FileHeader::programHeaderFlag(const Program_Header_t &ph) noexcept
-    -> std::string_view const {
-
-  auto phFlag = std::visit(overloaded{[](const Elf32_Program_Header_t &x32) { return x32.flags; },
-                                      [](const Elf64_Program_Header_t &x64) { return x64.flags; }},
-                           ph);
-
-  switch(phFlag) {
+[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t i) noexcept -> std::string_view const {
+  switch(i) {
   case pFlag::x: return "X";
   case pFlag::w: return "W";
   case pFlag::r: return "R";
