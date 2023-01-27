@@ -17,12 +17,11 @@ int main(int argc, const char *argv[]) {
   bool show_header = false;
   bool show_segments = false;
   bool show_sections = false;
-  bool show_version = false;
 
   CLI::App app{{}, "FeelELF"};
   try {
     app.set_help_flag("-H, --help", "Display this information");
-    app.add_flag("-v,--version", show_version, "Display version number of feelelf");
+    app.set_version_flag("-v,--version", "readelf version: 0.0.1", "Display version number of feelelf");
 
     app.add_flag("-h,--file-header", show_header, "Display the ELF file header");
     app.add_flag("-l,--program-headers,--segments", show_segments, "Display the ELF file header");
@@ -150,6 +149,4 @@ int main(int argc, const char *argv[]) {
       }
     }
   }
-
-  if(show_version) fmt::print("feelelf 0.0.1\n");
 }
