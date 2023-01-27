@@ -51,16 +51,16 @@ struct Elf32_Header_t {
   Elf32_Half type;          // object file type
   Elf32_Half machine;       // architecture
   Elf32_Word version;       // object file version
-  Elf32_Addr entry;         // entry point, virtual address to transfer control
-  Elf32_Off phoff;          // program header table offset, 0 if no program header
-  Elf32_Off shoff;          // section header table offset, 0 if no section header
+  Elf32_Addr entryPoint;    // entry point, virtual address to transfer control
+  Elf32_Off phOffset;       // program header table offset, 0 if no program header
+  Elf32_Off shOffset;       // section header table offset, 0 if no section header
   Elf32_Word flags;         // processor specific flags
-  Elf32_Half ehsize;        // ELF header size in bytes
-  Elf32_Half phentsize;     // program header table size in bytes
-  Elf32_Half phnum;         // number of entries in program header
-  Elf32_Half shentsize;     // section header table size in bytes
-  Elf32_Half shnum;         // number of entries in section header
-  Elf32_Half shstrndx;      // section header table index
+  Elf32_Half size;          // ELF header size in bytes
+  Elf32_Half phEntrySize;   // program header table size in bytes
+  Elf32_Half phNumber;      // number of entries in program header
+  Elf32_Half shEntrySize;   // section header table size in bytes
+  Elf32_Half shNumber;      // number of entries in section header
+  Elf32_Half shStringIndex; // section header table index
 };
 
 struct Elf64_Header_t {
@@ -68,16 +68,16 @@ struct Elf64_Header_t {
   Elf64_Half type;
   Elf64_Half machine;
   Elf64_Word version;
-  Elf64_Addr entry;
-  Elf64_Off phoff;
-  Elf64_Off shoff;
+  Elf64_Addr entryPoint;
+  Elf64_Off phOffset;
+  Elf64_Off shOffset;
   Elf64_Word flags;
-  Elf64_Half ehsize;
-  Elf64_Half phentsize;
-  Elf64_Half phnum;
-  Elf64_Half shentsize;
-  Elf64_Half shnum;
-  Elf64_Half shstrndx;
+  Elf64_Half size;
+  Elf64_Half phEntrySize;
+  Elf64_Half phNumber;
+  Elf64_Half shEntrySize;
+  Elf64_Half shNumber;
+  Elf64_Half shStringIndex;
 };
 using Elf_Header_t = std::variant<Elf32_Header_t, Elf64_Header_t>;
 

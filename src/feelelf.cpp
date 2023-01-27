@@ -321,23 +321,23 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&x32.type), sizeof(decltype(x32.type)));
             fin.read(reinterpret_cast<char *>(&x32.machine), sizeof(decltype(x32.machine)));
             fin.read(reinterpret_cast<char *>(&x32.version), sizeof(decltype(x32.version)));
-            fin.read(reinterpret_cast<char *>(&x32.entry), sizeof(decltype(x32.entry)));
-            fin.read(reinterpret_cast<char *>(&x32.phoff), sizeof(decltype(x32.phoff)));
-            fin.read(reinterpret_cast<char *>(&x32.shoff), sizeof(decltype(x32.shoff)));
+            fin.read(reinterpret_cast<char *>(&x32.entryPoint), sizeof(decltype(x32.entryPoint)));
+            fin.read(reinterpret_cast<char *>(&x32.phOffset), sizeof(decltype(x32.phOffset)));
+            fin.read(reinterpret_cast<char *>(&x32.shOffset), sizeof(decltype(x32.shOffset)));
             fin.read(reinterpret_cast<char *>(&x32.flags), sizeof(decltype(x32.flags)));
 
-            fin.read(reinterpret_cast<char *>(&x32.ehsize), sizeof(decltype(x32.ehsize)));
-            fin.read(reinterpret_cast<char *>(&x32.phentsize), sizeof(decltype(x32.phentsize)));
-            fin.read(reinterpret_cast<char *>(&x32.phnum), sizeof(decltype(x32.phnum)));
+            fin.read(reinterpret_cast<char *>(&x32.size), sizeof(decltype(x32.size)));
+            fin.read(reinterpret_cast<char *>(&x32.phEntrySize), sizeof(decltype(x32.phEntrySize)));
+            fin.read(reinterpret_cast<char *>(&x32.phNumber), sizeof(decltype(x32.phNumber)));
 
-            program_headers.resize(x32.phnum);
+            program_headers.resize(x32.phNumber);
             std::ranges::fill(program_headers, Elf32_Program_Header_t{});
 
-            fin.read(reinterpret_cast<char *>(&x32.shentsize), sizeof(decltype(x32.shentsize)));
-            fin.read(reinterpret_cast<char *>(&x32.shnum), sizeof(decltype(x32.shnum)));
-            fin.read(reinterpret_cast<char *>(&x32.shstrndx), sizeof(decltype(x32.shstrndx)));
+            fin.read(reinterpret_cast<char *>(&x32.shEntrySize), sizeof(decltype(x32.shEntrySize)));
+            fin.read(reinterpret_cast<char *>(&x32.shNumber), sizeof(decltype(x32.shNumber)));
+            fin.read(reinterpret_cast<char *>(&x32.shStringIndex), sizeof(decltype(x32.shStringIndex)));
 
-            section_headers.resize(x32.shnum);
+            section_headers.resize(x32.shNumber);
             std::ranges::fill(section_headers, Elf32_Section_Header_t{});
       },
       [&](Elf64_Header_t &x64) {
@@ -345,23 +345,23 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&x64.type), sizeof(decltype(x64.type)));
             fin.read(reinterpret_cast<char *>(&x64.machine), sizeof(decltype(x64.machine)));
             fin.read(reinterpret_cast<char *>(&x64.version), sizeof(decltype(x64.version)));
-            fin.read(reinterpret_cast<char *>(&x64.entry), sizeof(decltype(x64.entry)));
-            fin.read(reinterpret_cast<char *>(&x64.phoff), sizeof(decltype(x64.phoff)));
-            fin.read(reinterpret_cast<char *>(&x64.shoff), sizeof(decltype(x64.shoff)));
+            fin.read(reinterpret_cast<char *>(&x64.entryPoint), sizeof(decltype(x64.entryPoint)));
+            fin.read(reinterpret_cast<char *>(&x64.phOffset), sizeof(decltype(x64.phOffset)));
+            fin.read(reinterpret_cast<char *>(&x64.shOffset), sizeof(decltype(x64.shOffset)));
             fin.read(reinterpret_cast<char *>(&x64.flags), sizeof(decltype(x64.flags)));
 
-            fin.read(reinterpret_cast<char *>(&x64.ehsize), sizeof(decltype(x64.ehsize)));
-            fin.read(reinterpret_cast<char *>(&x64.phentsize), sizeof(decltype(x64.phentsize)));
-            fin.read(reinterpret_cast<char *>(&x64.phnum), sizeof(decltype(x64.phnum)));
+            fin.read(reinterpret_cast<char *>(&x64.size), sizeof(decltype(x64.size)));
+            fin.read(reinterpret_cast<char *>(&x64.phEntrySize), sizeof(decltype(x64.phEntrySize)));
+            fin.read(reinterpret_cast<char *>(&x64.phNumber), sizeof(decltype(x64.phNumber)));
 
-            program_headers.resize(x64.phnum);
+            program_headers.resize(x64.phNumber);
             std::ranges::fill(program_headers, Elf64_Program_Header_t{});
 
-            fin.read(reinterpret_cast<char *>(&x64.shentsize), sizeof(decltype(x64.shentsize)));
-            fin.read(reinterpret_cast<char *>(&x64.shnum), sizeof(decltype(x64.shnum)));
-            fin.read(reinterpret_cast<char *>(&x64.shstrndx), sizeof(decltype(x64.shstrndx)));
+            fin.read(reinterpret_cast<char *>(&x64.shEntrySize), sizeof(decltype(x64.shEntrySize)));
+            fin.read(reinterpret_cast<char *>(&x64.shNumber), sizeof(decltype(x64.shNumber)));
+            fin.read(reinterpret_cast<char *>(&x64.shStringIndex), sizeof(decltype(x64.shStringIndex)));
 
-            section_headers.resize(x64.shnum);
+            section_headers.resize(x64.shNumber);
             std::ranges::fill(section_headers, Elf64_Section_Header_t{});
       }
     }, elf_header);
@@ -486,20 +486,20 @@ auto FileHeader::version() noexcept -> int const {
 }
 
 auto FileHeader::entryPoint() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.entry; },
-                               [](const Elf64_Header_t &x64) -> int { return x64.entry; }},
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.entryPoint; },
+                               [](const Elf64_Header_t &x64) -> int { return x64.entryPoint; }},
                     elf_header);
 }
 
 auto FileHeader::programHeaderOffset() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.phoff; },
-                               [](const Elf64_Header_t &x64) -> int { return x64.phoff; }},
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.phOffset; },
+                               [](const Elf64_Header_t &x64) -> int { return x64.phOffset; }},
                     elf_header);
 }
 
-auto FileHeader::sectionHeaderOffset() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.shoff; },
-                               [](const Elf64_Header_t &x64) -> int { return x64.shoff; }},
+auto FileHeader::sectionHeaderOffset() noexcept -> std::size_t const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> std::size_t { return x32.shOffset; },
+                               [](const Elf64_Header_t &x64) -> std::size_t { return x64.shOffset; }},
                     elf_header);
 }
 
@@ -621,50 +621,50 @@ auto FileHeader::flags() noexcept -> int const {
 }
 
 auto FileHeader::headerSize() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.ehsize; },
-                               [](const Elf32_Header_t &x32) { return x32.ehsize; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.size; },
+                               [](const Elf32_Header_t &x32) { return x32.size; }},
                     elf_header);
 }
 
 auto FileHeader::programHeaderSize() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phentsize; },
-                               [](const Elf32_Header_t &x32) { return x32.phentsize; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phEntrySize; },
+                               [](const Elf32_Header_t &x32) { return x32.phEntrySize; }},
                     elf_header);
 }
 
 auto FileHeader::numProgramHeaders() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phnum; },
-                               [](const Elf32_Header_t &x32) { return x32.phnum; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phNumber; },
+                               [](const Elf32_Header_t &x32) { return x32.phNumber; }},
                     elf_header);
 }
 
-auto FileHeader::sectionHeaderSize() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shentsize; },
-                               [](const Elf32_Header_t &x32) { return x32.shentsize; }},
+auto FileHeader::sectionHeaderEntrySize() noexcept -> std::size_t const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shEntrySize; },
+                               [](const Elf32_Header_t &x32) { return x32.shEntrySize; }},
                     elf_header);
 }
 
 auto FileHeader::numSectionHeaders() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shnum; },
-                               [](const Elf32_Header_t &x32) { return x32.shnum; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shNumber; },
+                               [](const Elf32_Header_t &x32) { return x32.shNumber; }},
                     elf_header);
 }
 
-auto FileHeader::sectionHeaderStringTable() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shstrndx; },
-                               [](const Elf32_Header_t &x32) { return x32.shstrndx; }},
+auto FileHeader::sectionHeaderStringTableIndex() noexcept -> int const {
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shStringIndex; },
+                               [](const Elf32_Header_t &x32) { return x32.shStringIndex; }},
                     elf_header);
 }
 
 auto FileHeader::hasProgramHeaders() noexcept -> bool const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phoff == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.phoff == 0; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phOffset == 0; },
+                               [](const Elf32_Header_t &x32) { return x32.phOffset == 0; }},
                     elf_header);
 }
 
 auto FileHeader::hasSectionHeaders() noexcept -> bool const {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shoff == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.shoff == 0; }},
+  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shOffset == 0; },
+                               [](const Elf32_Header_t &x32) { return x32.shOffset == 0; }},
                     elf_header);
 }
 
