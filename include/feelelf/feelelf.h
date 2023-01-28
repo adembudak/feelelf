@@ -173,6 +173,7 @@ public:
 
   [[nodiscard]] auto sectionHeaderType(const std::size_t shType) noexcept -> std::string_view const;
   [[nodiscard]] auto sectionHeaderName(const std::size_t shName) noexcept -> std::string_view const;
+  [[nodiscard]] auto sectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const;
 
 private:
   [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;

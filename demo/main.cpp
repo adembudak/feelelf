@@ -131,8 +131,8 @@ int main(int argc, const char *argv[]) {
                      "num"_a = i++, "name"_a = header.sectionHeaderName(x64.name),
                      "type"_a = header.sectionHeaderType(x64.type), "address"_a = x64.addr,
                      "offset"_a = x64.offset, "size"_a = x64.size, "entrySize"_a = x64.entsize,
-                     "flags"_a = x64.flags, "link"_a = x64.link, "info"_a = x64.info,
-                     "align"_a = x64.addralign);
+                     "flags"_a = header.sectionHeaderFlags(x64.flags), "link"_a = x64.link,
+                     "info"_a = x64.info, "align"_a = x64.addralign);
         }
 
       } else {
@@ -146,10 +146,16 @@ int main(int argc, const char *argv[]) {
                      "num"_a = i++, "name"_a = header.sectionHeaderName(x86.name),
                      "type"_a = header.sectionHeaderType(x86.type), "address"_a = x86.addr,
                      "offset"_a = x86.offset, "size"_a = x86.size, "entrySize"_a = x86.entsize,
-                     "flags"_a = x86.flags, "link"_a = x86.link, "info"_a = x86.info,
-                     "align"_a = x86.addralign);
+                     "flags"_a = header.sectionHeaderFlags(x86.flags), "link"_a = x86.link,
+                     "info"_a = x86.info, "align"_a = x86.addralign);
         }
       }
+
+      fmt::print("\nKey to Flags:\n"
+                 "  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n"
+                 "  L (link order), O (extra OS processing required), G (group), T (TLS),\n"
+                 "  C (compressed), x (unknown), o (OS specific), E (exclude),\n"
+                 "  p (processor specific)\n");
     }
   }
 }

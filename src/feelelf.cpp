@@ -731,7 +731,7 @@ auto FileHeader::sectionHeaderType(const std::size_t shType) noexcept -> std::st
   // clang-format on
 }
 
-std::string s;
+std::string shNameStr;
 auto FileHeader::sectionHeaderName(const std::size_t shName) noexcept -> std::string_view const {
   const auto offset = std::visit(
       overloaded{[=](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
@@ -740,10 +740,31 @@ auto FileHeader::sectionHeaderName(const std::size_t shName) noexcept -> std::st
 
   fin.seekg(offset);
 
-  s.clear();
-  std::getline(fin, s, '\0');
+  shNameStr.clear();
+  std::getline(fin, shNameStr, '\0');
 
-  return s.c_str();
+  return shNameStr.c_str();
+}
+
+std::string shFlagsStr;
+auto FileHeader::sectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const {
+  shFlagsStr.clear();
+  if(shFlags & (1 << 0)) shFlagsStr.push_back('W');    // writable
+  if(shFlags & (1 << 1)) shFlagsStr.push_back('A');    // occupies memory during execution
+  if(shFlags & (1 << 2)) shFlagsStr.push_back('X');    // executable
+  if(shFlags & (1 << 4)) shFlagsStr.push_back('M');    // might be merged
+  if(shFlags & (1 << 5)) shFlagsStr.push_back('S');    // contains nul-terminated strings
+  if(shFlags & (1 << 6)) shFlagsStr.push_back('I');    // sh_info contains SHT index
+  if(shFlags & (1 << 7)) shFlagsStr.push_back('L');    // preserve order after combining
+  if(shFlags & (1 << 8)) shFlagsStr.push_back('O');    // non-standard OS specific handling required
+  if(shFlags & (1 << 9)) shFlagsStr.push_back('G');    // section is member of a group
+  if(shFlags & (1 << 10)) shFlagsStr.push_back('T');   // section hold thread-local data
+  if(shFlags & (1 << 11)) shFlagsStr.push_back('C');   // section with compressed data
+  if(shFlags == 0x0ff00000) shFlagsStr.push_back('o'); // OS-specific
+  if(shFlags == 0xf0000000) shFlagsStr.push_back('p'); // processor-specific
+  if(shFlags & (1 << 30)) shFlagsStr.push_back('?');   // (Revisit '?') special ordering requirement (Solaris)
+  if(shFlags & (1 << 31)) shFlagsStr.push_back('E');   // excluded unless referenced or allocated (Solaris)
+  return shFlagsStr.c_str();
 }
 
 } // namespace readelf
