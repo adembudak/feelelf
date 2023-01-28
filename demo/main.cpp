@@ -128,10 +128,11 @@ int main(int argc, const char *argv[]) {
           auto x64 = std::get<feelelf::Elf64_Section_Header_t>(o);
           fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
                      "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
-                     "num"_a = i++, "name"_a = x64.name, "type"_a = header.sectionHeaderType(x64.type),
-                     "address"_a = x64.addr, "offset"_a = x64.offset, "size"_a = x64.size,
-                     "entrySize"_a = x64.entsize, "flags"_a = x64.flags, "link"_a = x64.link,
-                     "info"_a = x64.info, "align"_a = x64.addralign);
+                     "num"_a = i++, "name"_a = header.sectionHeaderName(x64.name),
+                     "type"_a = header.sectionHeaderType(x64.type), "address"_a = x64.addr,
+                     "offset"_a = x64.offset, "size"_a = x64.size, "entrySize"_a = x64.entsize,
+                     "flags"_a = x64.flags, "link"_a = x64.link, "info"_a = x64.info,
+                     "align"_a = x64.addralign);
         }
 
       } else {
@@ -142,10 +143,11 @@ int main(int argc, const char *argv[]) {
           auto x86 = std::get<feelelf::Elf32_Section_Header_t>(o);
           fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>08x} {offset:>06x} {size:>06x} "
                      "{entrySize:<9x} {flags:<5} {link:<4} {info:<4} {align}\n",
-                     "num"_a = i++, "name"_a = x86.name, "type"_a = header.sectionHeaderType(x86.type),
-                     "address"_a = x86.addr, "offset"_a = x86.offset, "size"_a = x86.size,
-                     "entrySize"_a = x86.entsize, "flags"_a = x86.flags, "link"_a = x86.link,
-                     "info"_a = x86.info, "align"_a = x86.addralign);
+                     "num"_a = i++, "name"_a = header.sectionHeaderName(x86.name),
+                     "type"_a = header.sectionHeaderType(x86.type), "address"_a = x86.addr,
+                     "offset"_a = x86.offset, "size"_a = x86.size, "entrySize"_a = x86.entsize,
+                     "flags"_a = x86.flags, "link"_a = x86.link, "info"_a = x86.info,
+                     "align"_a = x86.addralign);
         }
       }
     }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -687,9 +688,9 @@ auto FileHeader::is64bit() noexcept -> bool const {
 }
 
 // Legal values for sh_type (section type).
-auto FileHeader::sectionHeaderType(const std::size_t i) noexcept -> std::string_view const {
+auto FileHeader::sectionHeaderType(const std::size_t shType) noexcept -> std::string_view const {
   // clang-format off
-  switch(i) {
+  switch(shType) {
   case 0:          return "NULL";           // Section header table entry unused
   case 1:          return "PROGBITS";       // Program data
   case 2:          return "SYMTAB";         // Symbol table
@@ -727,6 +728,22 @@ auto FileHeader::sectionHeaderType(const std::size_t i) noexcept -> std::string_
   case 0x80000000: return "LOUSER";         // Start of application-specific
   case 0x8fffffff: return "HIUSER";         // End of application-specific
   }
+  // clang-format on
+}
+
+std::string s;
+auto FileHeader::sectionHeaderName(const std::size_t shName) noexcept -> std::string_view const {
+  const auto offset = std::visit(
+      overloaded{[=](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
+                 [=](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
+      section_headers[sectionHeaderStringTableIndex()]);
+
+  fin.seekg(offset);
+
+  s.clear();
+  std::getline(fin, s, '\0');
+
+  return s.c_str();
 }
 
 } // namespace readelf
