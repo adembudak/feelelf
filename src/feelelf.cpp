@@ -491,9 +491,9 @@ auto FileHeader::entryPoint() noexcept -> int const {
                     elf_header);
 }
 
-auto FileHeader::programHeaderOffset() noexcept -> int const {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.phOffset; },
-                               [](const Elf64_Header_t &x64) -> int { return x64.phOffset; }},
+auto FileHeader::programHeaderOffset() noexcept -> std::size_t const {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> size_t { return x32.phOffset; },
+                               [](const Elf64_Header_t &x64) -> size_t { return x64.phOffset; }},
                     elf_header);
 }
 

@@ -152,8 +152,8 @@ public:
   [[nodiscard]] auto machine()             noexcept -> std::string_view const;
   [[nodiscard]] auto version()             noexcept -> int const;
   [[nodiscard]] auto entryPoint()          noexcept -> int const;
-  [[nodiscard]] auto programHeaderOffset() noexcept -> int const;
-  [[nodiscard]] auto sectionHeaderOffset() noexcept -> int const;
+  [[nodiscard]] auto programHeaderOffset() noexcept -> std::size_t const;
+  [[nodiscard]] auto sectionHeaderOffset() noexcept -> std::size_t const;
 
   [[nodiscard]] auto programHeaders()    noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders()    noexcept -> const decltype(section_headers) &;
@@ -167,9 +167,9 @@ public:
   [[nodiscard]] auto programHeaderSize() noexcept -> int const;
   [[nodiscard]] auto numProgramHeaders() noexcept -> int const;
 
-  [[nodiscard]] auto sectionHeaderSize() noexcept -> int const;
+  [[nodiscard]] auto sectionHeaderEntrySize() noexcept -> std::size_t const;
   [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
-  [[nodiscard]] auto sectionHeaderStringTable() noexcept -> int const;
+  [[nodiscard]] auto sectionHeaderStringTableIndex() noexcept -> int const;
 
   [[nodiscard]] auto sectionHeaderType(const std::size_t i) noexcept -> std::string_view const;
 

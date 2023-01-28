@@ -69,9 +69,10 @@ int main(int argc, const char *argv[]) {
       fmt::print("  {:<34} {} (bytes)\n", "Size of this header:", header.headerSize());
       fmt::print("  {:<34} {} (bytes)\n", "Size of program headers:", header.programHeaderSize());
       fmt::print("  {:<34} {}\n", "Number of program headers:", header.numProgramHeaders());
-      fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", header.sectionHeaderSize());
+      fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", header.sectionHeaderEntrySize());
       fmt::print("  {:<34} {}\n", "Number of section headers:", header.numSectionHeaders());
-      fmt::print("  {:<34} {}\n\n", "Section header string table index:", header.sectionHeaderStringTable());
+      fmt::print("  {:<34} {}\n\n",
+                 "Section header string table index:", header.sectionHeaderStringTableIndex());
     }
 
     if(show_segments) {
