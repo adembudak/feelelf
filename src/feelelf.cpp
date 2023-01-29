@@ -264,41 +264,6 @@ enum machine : Elf64_Half {
   num = 253
 };
 
-// Legal values for pType (segment type)
-enum pType {
-  pNull = 0,                 // program header table entry unused
-  load = 1,                  // loadable program segment
-  dynamic = 2,               // dynamic linking information
-  interp = 3,                // program interpreter
-  note = 4,                  // auxiliary information
-  shlib = 5,                 // reserved
-  phdr = 6,                  // entry for header table itself
-  tls = 7,                   // thread-local storage segment
-  num_ = 8,                  // number of defined types
-  loos = 0x60000000,         // start of OS-specific
-  gnu_eh_frame = 0x6474e550, // GCC .eh_frame_hdr segment
-  gnu_stack = 0x6474e551,    // indicates stack executability
-  gnu_relro = 0x6474e552,    // read-only after relocation
-  losunw = 0x6ffffffa,       //
-  sunwbss = 0x6ffffffa,      // Sun Specific segment
-  sunwstack = 0x6ffffffb,    // stack segment
-  hisunw = 0x6fffffff,       //
-  hios = 0x6FFfffff,         // end of OS-specific
-  loproc_ = 0x70000000,      // start of processor-specific
-  hiproc_ = 0x7fffffff       // end of processor-specific
-};
-
-// Legal values for p_flags (segment flags)
-enum pFlag {
-  x = (1 << 0),             // Segment is executable
-  w = (1 << 1),             // Segment is writable
-  r = (1 << 2),             // Segment is readable
-  rw = (1 << 2) | (1 << 1), // Segment is readable/writable
-  re = (1 << 2) | (1 << 0), // Segment is readable/executable
-  maskOS = 0x0ff00000,      // OS-specific
-  maskProc = 0xf0000000     // Processor-specific
-};
-
 std::ifstream fin;
 
 auto FileHeader::open(const char *file) noexcept -> bool {
@@ -596,23 +561,22 @@ auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_
   case 0x6ffffffb: return "SUNWSTACK";    // stack segment
   //case 0x6fffffff: return "HISUNW";     //
   case 0x6FFfffff: return "HIOS";         // end of OS-specific
-  case 0x70000000: return "LOPROC";       // start of processor-specifi
+  case 0x70000000: return "LOPROC";       // start of processor-specific
   case 0x7fffffff: return "HIPROC";       // end of processor-specific
   }
-  // clang-format off
 }
 
-[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t i) noexcept -> std::string_view const {
-  switch(i) {
-  case pFlag::x: return "X";
-  case pFlag::w: return "W";
-  case pFlag::r: return "R";
-  case pFlag::rw: return "RW";
-  case pFlag::re: return "R E";
-  case pFlag::maskOS: return "MASKOS";
-  case pFlag::maskProc: return "MASKProc";
-  default: return "unknown";
-  }
+std::string phFlagStr;
+[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t phFlags) noexcept -> std::string_view const {
+  phFlagStr.clear();
+
+  if(phFlags & (1 << 0)) phFlagStr.push_back('X');
+  if(phFlags & (1 << 1)) phFlagStr.push_back('W');
+  if(phFlags & (1 << 2)) phFlagStr.push_back('R');
+  // if(phFlags & 0x0ff00000) REVISIT: handle OS-specific
+  // if(phFlags & 0xf0000000) REVISIT: handle processor-specific
+
+  return phFlagStr.c_str();
 }
 
 auto FileHeader::flags() noexcept -> int const {
