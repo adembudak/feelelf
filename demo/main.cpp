@@ -2,7 +2,7 @@
 
 #include <CLI/CLI.hpp>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fmt/ranges.h>
 
 #include <filesystem>
@@ -18,7 +18,7 @@ int main(int argc, const char *argv[]) {
   bool show_segments = false;
   bool show_sections = false;
 
-  CLI::App app{{}, "FeelELF"};
+  CLI::App app{{}, "readelf"};
   try {
     app.set_help_flag("-H, --help", "Display this information");
     app.set_version_flag("-v,--version", "readelf version: 0.0.1", "Display version number of feelelf");
@@ -114,7 +114,7 @@ int main(int argc, const char *argv[]) {
     }
 
     if(show_sections) {
-      fmt::print("There are {} section headers, starting at offset {:#0x}:\n\n", header.numSectionHeaders(),
+      fmt::print("\nThere are {} section headers, starting at offset {:#0x}:\n\n", header.numSectionHeaders(),
                  header.sectionHeaderOffset());
 
       fmt::print("Section Headers:\n");
