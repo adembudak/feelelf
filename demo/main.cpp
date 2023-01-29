@@ -17,6 +17,7 @@ int main(int argc, const char *argv[]) {
   bool show_header = false;
   bool show_segments = false;
   bool show_sections = false;
+  bool show_symbols = false;
 
   CLI::App app{{}, "readelf"};
   try {
@@ -24,8 +25,16 @@ int main(int argc, const char *argv[]) {
     app.set_version_flag("-v,--version", "readelf version: 0.0.1", "Display version number of feelelf");
 
     app.add_flag("-h,--file-header", show_header, "Display the ELF file header");
-    app.add_flag("-l,--program-headers,--segments", show_segments, "Display the ELF file header");
-    app.add_flag("-S,--section-headers,--sections", show_sections, "Display the sections' header");
+
+    app.add_flag("-l,--program-headers", show_segments, "Display the ELF file header");
+    app.add_flag("--segments", show_segments, "An alias for --program-headers");
+
+    app.add_flag("-S,--section-headers", show_sections, "Display the sections' header");
+    app.add_flag("--sections", show_sections, "An alias for --section-headers");
+
+    app.add_flag("-s,--syms", show_symbols, "Display the symbol table");
+    app.add_flag("--symbols", show_symbols, "An alias for --syms");
+
     app.add_option("elf-files", files);
 
     app.parse(argc, argv);
