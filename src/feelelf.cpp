@@ -283,49 +283,19 @@ auto FileHeader::decode() noexcept -> void {
   std::visit(
     overloaded{
       [&](Elf32_Header_t &x32) {
-            fin.read(reinterpret_cast<char *>(&x32.ident), i_nident);
-            fin.read(reinterpret_cast<char *>(&x32.type), sizeof(decltype(x32.type)));
-            fin.read(reinterpret_cast<char *>(&x32.machine), sizeof(decltype(x32.machine)));
-            fin.read(reinterpret_cast<char *>(&x32.version), sizeof(decltype(x32.version)));
-            fin.read(reinterpret_cast<char *>(&x32.entryPoint), sizeof(decltype(x32.entryPoint)));
-            fin.read(reinterpret_cast<char *>(&x32.phOffset), sizeof(decltype(x32.phOffset)));
-            fin.read(reinterpret_cast<char *>(&x32.shOffset), sizeof(decltype(x32.shOffset)));
-            fin.read(reinterpret_cast<char *>(&x32.flags), sizeof(decltype(x32.flags)));
-
-            fin.read(reinterpret_cast<char *>(&x32.size), sizeof(decltype(x32.size)));
-            fin.read(reinterpret_cast<char *>(&x32.phEntrySize), sizeof(decltype(x32.phEntrySize)));
-            fin.read(reinterpret_cast<char *>(&x32.phNumber), sizeof(decltype(x32.phNumber)));
+            fin.read(reinterpret_cast<char*>(&x32),  sizeof(decltype(x32)));
 
             program_headers.resize(x32.phNumber);
             std::ranges::fill(program_headers, Elf32_Program_Header_t{});
-
-            fin.read(reinterpret_cast<char *>(&x32.shEntrySize), sizeof(decltype(x32.shEntrySize)));
-            fin.read(reinterpret_cast<char *>(&x32.shNumber), sizeof(decltype(x32.shNumber)));
-            fin.read(reinterpret_cast<char *>(&x32.shStringIndex), sizeof(decltype(x32.shStringIndex)));
 
             section_headers.resize(x32.shNumber);
             std::ranges::fill(section_headers, Elf32_Section_Header_t{});
       },
       [&](Elf64_Header_t &x64) {
-            fin.read(reinterpret_cast<char *>(&x64.ident), i_nident);
-            fin.read(reinterpret_cast<char *>(&x64.type), sizeof(decltype(x64.type)));
-            fin.read(reinterpret_cast<char *>(&x64.machine), sizeof(decltype(x64.machine)));
-            fin.read(reinterpret_cast<char *>(&x64.version), sizeof(decltype(x64.version)));
-            fin.read(reinterpret_cast<char *>(&x64.entryPoint), sizeof(decltype(x64.entryPoint)));
-            fin.read(reinterpret_cast<char *>(&x64.phOffset), sizeof(decltype(x64.phOffset)));
-            fin.read(reinterpret_cast<char *>(&x64.shOffset), sizeof(decltype(x64.shOffset)));
-            fin.read(reinterpret_cast<char *>(&x64.flags), sizeof(decltype(x64.flags)));
-
-            fin.read(reinterpret_cast<char *>(&x64.size), sizeof(decltype(x64.size)));
-            fin.read(reinterpret_cast<char *>(&x64.phEntrySize), sizeof(decltype(x64.phEntrySize)));
-            fin.read(reinterpret_cast<char *>(&x64.phNumber), sizeof(decltype(x64.phNumber)));
+            fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64)));
 
             program_headers.resize(x64.phNumber);
             std::ranges::fill(program_headers, Elf64_Program_Header_t{});
-
-            fin.read(reinterpret_cast<char *>(&x64.shEntrySize), sizeof(decltype(x64.shEntrySize)));
-            fin.read(reinterpret_cast<char *>(&x64.shNumber), sizeof(decltype(x64.shNumber)));
-            fin.read(reinterpret_cast<char *>(&x64.shStringIndex), sizeof(decltype(x64.shStringIndex)));
 
             section_headers.resize(x64.shNumber);
             std::ranges::fill(section_headers, Elf64_Section_Header_t{});
@@ -474,30 +444,9 @@ auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & 
   fin.seekg(programHeaderOffset());
 
   for(auto &ph : program_headers) {
-    std::visit(
-      overloaded{
-        [](Elf32_Program_Header_t &x86) {
-             fin.read(reinterpret_cast<char *>(&x86.type), sizeof(decltype(x86.type)));
-             fin.read(reinterpret_cast<char *>(&x86.offset), sizeof(decltype(x86.offset)));
-             fin.read(reinterpret_cast<char *>(&x86.vaddr), sizeof(decltype(x86.vaddr)));
-             fin.read(reinterpret_cast<char *>(&x86.paddr), sizeof(decltype(x86.paddr)));
-             fin.read(reinterpret_cast<char *>(&x86.filesz), sizeof(decltype(x86.filesz)));
-             fin.read(reinterpret_cast<char *>(&x86.memsz), sizeof(decltype(x86.memsz)));
-             fin.read(reinterpret_cast<char *>(&x86.flags), sizeof(decltype(x86.flags)));
-             fin.read(reinterpret_cast<char *>(&x86.align), sizeof(decltype(x86.align)));
-        },
-
-        [](Elf64_Program_Header_t &x64) {
-             fin.read(reinterpret_cast<char *>(&x64.type), sizeof(decltype(x64.type)));
-             fin.read(reinterpret_cast<char *>(&x64.flags), sizeof(decltype(x64.flags)));
-             fin.read(reinterpret_cast<char *>(&x64.offset), sizeof(decltype(x64.offset)));
-             fin.read(reinterpret_cast<char *>(&x64.vaddr), sizeof(decltype(x64.vaddr)));
-             fin.read(reinterpret_cast<char *>(&x64.paddr), sizeof(decltype(x64.paddr)));
-             fin.read(reinterpret_cast<char *>(&x64.filesz), sizeof(decltype(x64.filesz)));
-             fin.read(reinterpret_cast<char *>(&x64.memsz), sizeof(decltype(x64.memsz)));
-             fin.read(reinterpret_cast<char *>(&x64.align), sizeof(decltype(x64.align)));
-        }
-      }, ph);
+    std::visit(overloaded{[](Elf32_Program_Header_t &x86) { fin.read(reinterpret_cast<char *>(&x86), sizeof(decltype(x86))); },
+                          [](Elf64_Program_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }},
+               ph);
   }
 
   return program_headers;
@@ -508,32 +457,9 @@ auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & 
 
   for(auto &sh : section_headers) {
     std::visit(
-      overloaded{
-        [](Elf32_Section_Header_t &x86) {
-             fin.read(reinterpret_cast<char *>(&x86.name), sizeof(decltype(x86.name)));
-             fin.read(reinterpret_cast<char *>(&x86.type), sizeof(decltype(x86.type)));
-             fin.read(reinterpret_cast<char *>(&x86.flags), sizeof(decltype(x86.flags)));
-             fin.read(reinterpret_cast<char *>(&x86.addr), sizeof(decltype(x86.addr)));
-             fin.read(reinterpret_cast<char *>(&x86.offset), sizeof(decltype(x86.offset)));
-             fin.read(reinterpret_cast<char *>(&x86.size), sizeof(decltype(x86.size)));
-             fin.read(reinterpret_cast<char *>(&x86.link), sizeof(decltype(x86.link)));
-             fin.read(reinterpret_cast<char *>(&x86.info), sizeof(decltype(x86.info)));
-             fin.read(reinterpret_cast<char *>(&x86.addralign), sizeof(decltype(x86.addralign)));
-             fin.read(reinterpret_cast<char *>(&x86.entsize), sizeof(decltype(x86.entsize)));
-        },
-        [](Elf64_Section_Header_t &x64) {
-             fin.read(reinterpret_cast<char *>(&x64.name), sizeof(decltype(x64.name)));
-             fin.read(reinterpret_cast<char *>(&x64.type), sizeof(decltype(x64.type)));
-             fin.read(reinterpret_cast<char *>(&x64.flags), sizeof(decltype(x64.flags)));
-             fin.read(reinterpret_cast<char *>(&x64.addr), sizeof(decltype(x64.addr)));
-             fin.read(reinterpret_cast<char *>(&x64.offset), sizeof(decltype(x64.offset)));
-             fin.read(reinterpret_cast<char *>(&x64.size), sizeof(decltype(x64.size)));
-             fin.read(reinterpret_cast<char *>(&x64.link), sizeof(decltype(x64.link)));
-             fin.read(reinterpret_cast<char *>(&x64.info), sizeof(decltype(x64.info)));
-             fin.read(reinterpret_cast<char *>(&x64.addralign), sizeof(decltype(x64.addralign)));
-             fin.read(reinterpret_cast<char *>(&x64.entsize), sizeof(decltype(x64.entsize)));
-        }
-      }, sh);
+      overloaded{[](Elf32_Section_Header_t &x86) { fin.read(reinterpret_cast<char *>(&x86), sizeof(decltype(x86))); },
+                 [](Elf64_Section_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }},
+        sh);
   }
 
   return section_headers;
@@ -698,8 +624,8 @@ auto FileHeader::getSectionHeaderType(const std::size_t shType) noexcept -> std:
 std::string shNameStr;
 auto FileHeader::getSectionHeaderName(const std::size_t shName) noexcept -> std::string_view const {
   const auto offset = std::visit(
-      overloaded{[=](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
-                 [=](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
+      overloaded{[shName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
+                 [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
       section_headers[sectionHeaderStringTableIndex()]);
 
   fin.seekg(offset);
