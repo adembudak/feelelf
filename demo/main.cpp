@@ -12,19 +12,20 @@ int main(int argc, const char *argv[]) {
   namespace fs = std::filesystem;
   using namespace fmt::literals;
 
-  std::vector<fs::path> files;
+  std::vector<fs::path> elf_files;
 
-  bool show_header = false;
+  bool show_fileheader = false;
   bool show_segments = false;
   bool show_sections = false;
   bool show_symbols = false;
+  bool show_headers = false;
 
   CLI::App app{{}, "readelf"};
   try {
     app.set_help_flag("-H, --help", "Display this information");
     app.set_version_flag("-v,--version", "readelf version: 0.0.1", "Display version number of feelelf");
 
-    app.add_flag("-h,--file-header", show_header, "Display the ELF file header");
+    app.add_flag("-h,--file-header", show_fileheader, "Display the ELF file header");
 
     app.add_flag("-l,--program-headers", show_segments, "Display the ELF file header");
     app.add_flag("--segments", show_segments, "An alias for --program-headers");
@@ -35,7 +36,9 @@ int main(int argc, const char *argv[]) {
     app.add_flag("-s,--syms", show_symbols, "Display the symbol table");
     app.add_flag("--symbols", show_symbols, "An alias for --syms");
 
-    app.add_option("elf-files", files);
+    app.add_flag("-e,--headers", show_headers, "Equivalent to: -h -l -s");
+
+    app.add_option("elf-file(s)", elf_files)->option_text(" ... ");
 
     app.parse(argc, argv);
   }
@@ -43,9 +46,13 @@ int main(int argc, const char *argv[]) {
     return app.exit(e);
   }
 
+  if(show_headers) {
+    show_fileheader = show_segments = show_sections = true;
+  }
+
   feelelf::FileHeader header;
 
-  for(const auto &p : files) {
+  for(const auto &p : elf_files) {
     if(!fs::exists(p)) {
       fmt::print("readelf: Error: '{}': No such file\n", p.c_str());
       continue;
@@ -60,7 +67,7 @@ int main(int argc, const char *argv[]) {
 
     header.decode();
 
-    if(show_header) {
+    if(show_fileheader) {
       fmt::print("ELF Header:\n");
       fmt::print("  {:<8} {:02x}\n", "Magic:", fmt::join(header.identificationArray(), " "));
       fmt::print("  {:<34} {}\n", "Class:", header.fileClass());
@@ -85,7 +92,7 @@ int main(int argc, const char *argv[]) {
     }
 
     if(show_segments) {
-      if(!show_header) {
+      if(!show_fileheader) {
         fmt::print("\nElf file type is {}\n", header.fileClass());
         fmt::print("Entry point {:#x}\n", header.entryPoint());
         fmt::print("There are {} program headers, starting at offset {}\n\n", header.numProgramHeaders(),
