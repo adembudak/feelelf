@@ -567,12 +567,12 @@ auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_
 }
 
 std::string phFlagStr;
-[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t phFlags) noexcept -> std::string_view const {
+[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const {
   phFlagStr.clear();
 
-  if(phFlags & (1 << 0)) phFlagStr.push_back('X');
-  if(phFlags & (1 << 1)) phFlagStr.push_back('W');
-  if(phFlags & (1 << 2)) phFlagStr.push_back('R');
+  if(phFlag & (1 << 0)) phFlagStr.push_back('X');
+  if(phFlag & (1 << 1)) phFlagStr.push_back('W');
+  if(phFlag & (1 << 2)) phFlagStr.push_back('R');
   // if(phFlags & 0x0ff00000) REVISIT: handle OS-specific
   // if(phFlags & 0xf0000000) REVISIT: handle processor-specific
 
