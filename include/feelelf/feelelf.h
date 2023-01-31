@@ -131,6 +131,25 @@ struct Elf64_Section_Header_t {
 };
 using Section_Header_t = std::variant<Elf32_Section_Header_t, Elf64_Section_Header_t>;
 
+struct Elf32_Symbol_t {
+  Elf32_Word name;  // symbol name (string tbl index)
+  Elf32_Addr value; // symbol value
+  Elf32_Word size;  // symbol size
+  Elf_byte info;    // symbol type and binding
+  Elf_byte other;   // symbol Visibility
+  Elf32_Half shndx; // section index
+};
+
+struct Elf64_Symbol_t {
+  Elf64_Word name;
+  Elf_byte info;
+  Elf_byte other;
+  Elf32_Half shndx;
+  Elf64_Addr value;
+  Elf64_Off size;
+};
+using Symbol_t = std::variant<Elf32_Symbol_t, Elf64_Symbol_t>;
+
 class FileHeader {
   Elf_Header_t elf_header;
   std::vector<Program_Header_t> program_headers;
