@@ -540,7 +540,7 @@ auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & 
 }
 // clang-format on
 
-auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_view const {
+auto FileHeader::getProgramHeaderType(const std::size_t i) noexcept -> std::string_view const {
   // clang-format off
   switch(i) {
   case 0: return "NULL";                  // program header table entry
@@ -567,7 +567,7 @@ auto FileHeader::programHeaderType(const std::size_t i) noexcept -> std::string_
 }
 
 std::string phFlagStr;
-[[nodiscard]] auto FileHeader::programHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const {
+[[nodiscard]] auto FileHeader::getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const {
   phFlagStr.clear();
 
   if(phFlag & (1 << 0)) phFlagStr.push_back('X');
@@ -652,7 +652,7 @@ auto FileHeader::is64bit() noexcept -> bool const {
 }
 
 // Legal values for sh_type (section type).
-auto FileHeader::sectionHeaderType(const std::size_t shType) noexcept -> std::string_view const {
+auto FileHeader::getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view const {
   // clang-format off
   switch(shType) {
   case 0:          return "NULL";           // Section header table entry unused
@@ -696,7 +696,7 @@ auto FileHeader::sectionHeaderType(const std::size_t shType) noexcept -> std::st
 }
 
 std::string shNameStr;
-auto FileHeader::sectionHeaderName(const std::size_t shName) noexcept -> std::string_view const {
+auto FileHeader::getSectionHeaderName(const std::size_t shName) noexcept -> std::string_view const {
   const auto offset = std::visit(
       overloaded{[=](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
                  [=](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
@@ -711,7 +711,7 @@ auto FileHeader::sectionHeaderName(const std::size_t shName) noexcept -> std::st
 }
 
 std::string shFlagsStr;
-auto FileHeader::sectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const {
+auto FileHeader::getSectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const {
   shFlagsStr.clear();
   if(shFlags & (1 << 0)) shFlagsStr.push_back('W');    // writable
   if(shFlags & (1 << 1)) shFlagsStr.push_back('A');    // occupies memory during execution

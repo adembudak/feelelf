@@ -177,8 +177,8 @@ public:
   [[nodiscard]] auto programHeaders()    noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders()    noexcept -> const decltype(section_headers) &;
 
-  [[nodiscard]] auto programHeaderType(const std::size_t phType) noexcept -> std::string_view const;
-  [[nodiscard]] auto programHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const;
+  [[nodiscard]] auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view const;
+  [[nodiscard]] auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const;
 
   [[nodiscard]] auto flags()             noexcept -> int const;
   [[nodiscard]] auto headerSize()        noexcept -> int const;
@@ -190,9 +190,9 @@ public:
   [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
   [[nodiscard]] auto sectionHeaderStringTableIndex() noexcept -> int const;
 
-  [[nodiscard]] auto sectionHeaderType(const std::size_t shType) noexcept -> std::string_view const;
-  [[nodiscard]] auto sectionHeaderName(const std::size_t shName) noexcept -> std::string_view const;
-  [[nodiscard]] auto sectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const;
+  [[nodiscard]] auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view const;
+  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName) noexcept -> std::string_view const;
+  [[nodiscard]] auto getSectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const;
 
 private:
   [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;
