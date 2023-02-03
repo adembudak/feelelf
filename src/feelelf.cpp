@@ -1,9 +1,9 @@
 #include <feelelf/feelelf.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <fstream>
-#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -35,20 +35,14 @@ auto FileHeader::decode() noexcept -> void {
       [&](Elf32_Header_t &x32) {
             fin.read(reinterpret_cast<char*>(&x32),  sizeof(decltype(x32)));
 
-            program_headers.resize(x32.phNumber);
-            std::ranges::fill(program_headers, Elf32_Program_Header_t{});
-
-            section_headers.resize(x32.shNumber);
-            std::ranges::fill(section_headers, Elf32_Section_Header_t{});
+            program_headers.resize(x32.phNumber, Elf32_Program_Header_t{});
+            section_headers.resize(x32.shNumber,Elf32_Section_Header_t{} );
       },
       [&](Elf64_Header_t &x64) {
             fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64)));
 
-            program_headers.resize(x64.phNumber);
-            std::ranges::fill(program_headers, Elf64_Program_Header_t{});
-
-            section_headers.resize(x64.shNumber);
-            std::ranges::fill(section_headers, Elf64_Section_Header_t{});
+            program_headers.resize(x64.phNumber, Elf64_Program_Header_t{});
+            section_headers.resize(x64.shNumber,Elf64_Section_Header_t{} );
       }
     }, elf_header);
   // clang-format on
@@ -214,7 +208,6 @@ auto FileHeader::sectionHeaders() noexcept -> const decltype(section_headers) & 
 
   return section_headers;
 }
-// clang-format on
 
 auto FileHeader::getProgramHeaderType(const std::size_t i) noexcept -> std::string_view const {
   // clang-format off
@@ -309,15 +302,15 @@ auto FileHeader::hasSectionHeaders() noexcept -> bool const {
                     elf_header);
 }
 
-constexpr Elf_byte identification_bytes[]{0x7f, 'E', 'L', 'F'};
+constexpr std::array<Elf_byte,4> identification_bytes{0x7f, 'E', 'L', 'F'};
 
 auto FileHeader::isELF() noexcept -> bool const {
   fin.seekg(0);
 
-  Elf_byte temp[4]{};
-  fin.read(reinterpret_cast<char *>(temp), std::size(temp) * sizeof(Elf_byte));
+  std::array<Elf_byte,4> buf{};
+  fin.read(reinterpret_cast<char *>(buf.data()), std::size(buf) * sizeof(Elf_byte));
 
-  return std::ranges::equal(temp, identification_bytes);
+  return identification_bytes == buf;
 }
 
 auto FileHeader::is64bit() noexcept -> bool const {
@@ -407,4 +400,4 @@ auto FileHeader::getSectionHeaderFlags(const std::size_t shFlags) noexcept -> st
   return shFlagsStr.c_str();
 }
 
-} // namespace readelf
+} // namespace feelelf
