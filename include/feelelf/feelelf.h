@@ -176,6 +176,7 @@ public:
 
   [[nodiscard]] auto programHeaders() noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders() noexcept -> decltype(section_headers) const &;
+  [[nodiscard]] auto symbols()        noexcept -> std::vector<Symbol_t> const;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
@@ -202,6 +203,9 @@ private:
 [[nodiscard]] auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view;
 [[nodiscard]] auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view;
 
+[[nodiscard]] auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view;
+[[nodiscard]] auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view;
+[[nodiscard]] auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view;
 
 static_assert(std::copyable<FileHeader>);
 static_assert(std::movable<FileHeader>);

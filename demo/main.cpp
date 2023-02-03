@@ -171,5 +171,26 @@ int main(int argc, const char *argv[]) {
                  "  C (compressed), x (unknown), o (OS specific), E (exclude),\n"
                  "  p (processor specific)\n");
     }
+
+    if(show_symbols) {
+      const auto symbols = header.symbols();
+
+      if(!symbols.empty()) {
+        fmt::print("   Num:     Value  Size Type    Bind      Visibility   Index Name\n");
+        for(int i = 0; const auto &sym : symbols) {
+          if(std::holds_alternative<feelelf::Elf32_Symbol_t>(sym)) {
+            const auto x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
+            fmt::print("   {num:>3}: {value:<#010x} {size:>4} {type:<8} {binding:<6} {visibility:<10} {index:<10} "
+                       "{name:<10} \n",
+                       "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
+                       "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
+                       "visibility"_a = feelelf::getSymbolVisibility(x86.other), "index"_a = x86.shndx,
+                       "name"_a = x86.name);
+          } else {
+            // todo
+          }
+        }
+      }
+    }
   }
 }

@@ -1,5 +1,7 @@
 #include <feelelf/feelelf.h>
 
+#include <elf.h>
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -204,25 +206,40 @@ auto FileHeader::sectionHeaders() noexcept -> decltype(section_headers) const & 
   return section_headers;
 }
 
-std::string typei(unsigned i) {
-  // clang-format off
 
-  switch(i) {
-  case 0: return "NOTYPE";     /* Symbol type is unspecified */
-  case 1: return "OBJECT";     /* Symbol is a data object */
-  case 2: return "FUNC";       /* Symbol is a code object */
-  case 3: return "SECTION";    /* Symbol associated with a section */
-  case 4: return "FILE";       /* Symbol's name is file name */
-  case 5: return "COMMON";     /* Symbol is a common data object */
-  case 6: return "TLS";        /* Symbol is thread-local data object*/
-  case 7: return "NUM";        /* Number of defined types.  */
-//case 10: return "LOOS";      /* Start of OS-specific */
-  case 10: return "GNU_IFUNC"; /* Symbol is indirect code object */
-//case 12: return "HIOS";      /* End of OS-specific */
-  case 13: return "LOPROC";    /* Start of processor-specific */
-  case 15: return "HIPROC";    /* End of processor-specific */
+auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
+  std::vector<Symbol_t> symbols;
+
+  auto symbol_section = std::ranges::find_if(sectionHeaders(), [](const auto &section) {
+    return std::visit(overloaded{[](const Elf32_Section_Header_t &x86) { return x86.type; },
+                                 [](const Elf64_Section_Header_t &x64) { return x64.type; }},
+                      section) == 2;
+  });
+
+  if(symbol_section != section_headers.end()) {
+    std::visit(overloaded{
+                 [&](const Elf32_Section_Header_t &x86) {
+                       fin.seekg(x86.offset);
+                       const int size = x86.size / x86.entsize;
+
+                       Elf32_Symbol_t symbol{};
+                       for(int i = 0; i < size; ++i) {
+                         fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+                           symbols.push_back(symbol);
+                         }
+                     }, 
+                  [&](const Elf64_Section_Header_t &x64) {
+                        fin.seekg(x64.offset);
+                        const int size = x64.size / x64.entsize;
+
+                        Elf64_Symbol_t symbol{};
+                        for(int i = 0; i < size; ++i) {
+                          fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+                          symbols.push_back(symbol);
+                        }
+                  }}, *symbol_section);
   }
-  // clang-format on
+  return symbols;
 }
 
 auto FileHeader::flags() const noexcept -> int {
@@ -413,6 +430,49 @@ auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view
   if(shFlag & (1 << 30)) shFlagsStr.push_back('?');   // (Revisit '?') special ordering requirement (Solaris)
   if(shFlag & (1 << 31)) shFlagsStr.push_back('E');   // excluded unless referenced or allocated (Solaris)
   return shFlagsStr.c_str();
+}
+
+auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view {
+  // clang-format off
+  switch(symInfo & 0b1111) {
+  case 0: return "NOTYPE";     // symbol type is unspecified
+  case 1: return "OBJECT";     // symbol is a data object
+  case 2: return "FUNC";       // symbol is a code object
+  case 3: return "SECTION";    // symbol associated with a section
+  case 4: return "FILE";       // symbol's name is file name
+  case 5: return "COMMON";     // symbol is a common data object
+  case 6: return "TLS";        // symbol is thread-local data object
+  case 7: return "NUM";        // number of defined types
+//case 10: return "LOOS";      // start of OS-specific
+  case 10: return "GNU_IFUNC"; // symbol is indirect code object
+//case 12: return "HIOS";      // end of OS-specific
+  case 13: return "LOPROC";    // start of processor-specific
+  case 15: return "HIPROC";    // end of processor-specific
+  }
+  // clang-format on
+}
+
+auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view {
+  switch(symInfo >> 4) {
+  case 0: return "LOCAL";   // local symbol
+  case 1: return "GLOBAL";  // global symbol
+  case 2: return "WEAK";    // weak symbol
+  case 3: return "NUM";     // number of defined types.
+  case 10: return "LOOS";   // start of OS-specific
+  case 12: return "HIOS";   // end of OS-specific
+  case 13: return "LOPROC"; // start of processor-specific
+  case 15: return "HIPROC"; // end of processor-specific
+  }
+  // case 10: return "GNU_UNIQUE"; i// Unique symbol.
+}
+
+auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
+  switch(symOther & 0b11) {
+  case 0: return "DEFAULT";   // default symbol visibility rules
+  case 1: return "INTERNAL";  // processor specific hidden class
+  case 2: return "HIDDEN";    // sym unavailable in other modules
+  case 3: return "PROTECTED"; // not preemptible, not exported
+  }
 }
 
 } // namespace feelelf
