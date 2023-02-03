@@ -1,7 +1,5 @@
 #include <feelelf/feelelf.h>
 
-#include <elf.h>
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
