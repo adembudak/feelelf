@@ -87,8 +87,7 @@ int main(int argc, const char *argv[]) {
       fmt::print("  {:<34} {}\n", "Number of program headers:", header.numProgramHeaders());
       fmt::print("  {:<34} {} (bytes)\n", "Size of section headers:", header.sectionHeaderEntrySize());
       fmt::print("  {:<34} {}\n", "Number of section headers:", header.numSectionHeaders());
-      fmt::print("  {:<34} {}\n\n",
-                 "Section header string table index:", header.sectionHeaderStringTableIndex());
+      fmt::print("  {:<34} {}\n\n", "Section header string table index:", header.sectionHeaderStringTableIndex());
     }
 
     if(show_segments) {
@@ -109,21 +108,21 @@ int main(int argc, const char *argv[]) {
           for(const auto &o : header.programHeaders()) {
             auto x64 = std::get<feelelf::Elf64_Program_Header_t>(o);
             fmt::print("{:<14} {:#016x} {:#016x} {:#016x} {:#016x} {:#016x} {:<7} {:#0x}\n",
-                       header.getProgramHeaderType(x64.type), x64.offset, x64.vaddr, x64.paddr, x64.filesz,
-                       x64.memsz, header.getProgramHeaderFlag(x64.flags), x64.align);
+                       header.getProgramHeaderType(x64.type), x64.offset, x64.vaddr, x64.paddr, x64.filesz, x64.memsz,
+                       header.getProgramHeaderFlag(x64.flags), x64.align);
           }
         }
 
         else {
 
-          fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr",
-                     "PhysAddr", "FileSiz", "MemSiz", "Flags", "Align");
+          fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr", "PhysAddr",
+                     "FileSiz", "MemSiz", "Flags", "Align");
 
           for(const auto &o : header.programHeaders()) {
             auto x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
             fmt::print("{:<14} {:#08x} {:#010x} {:#010x} {:#07x} {:#07x} {:<6} {:#0x}\n",
-                       header.getProgramHeaderType(x86.type), x86.offset, x86.vaddr, x86.paddr, x86.filesz,
-                       x86.memsz, header.getProgramHeaderFlag(x86.flags), x86.align);
+                       header.getProgramHeaderType(x86.type), x86.offset, x86.vaddr, x86.paddr, x86.filesz, x86.memsz,
+                       header.getProgramHeaderFlag(x86.flags), x86.align);
           }
         }
       }
@@ -137,33 +136,32 @@ int main(int argc, const char *argv[]) {
 
       if(std::holds_alternative<feelelf::Elf64_Section_Header_t>(header.sectionHeaders()[0])) {
         fmt::print("  {} {:<17} {:<15} {:<16} {:<8} {:<16} {:<16} {:<5} {:<4} {:<4} {}\n", //
-                   "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info",
-                   "Align");
+                   "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &o : header.sectionHeaders()) {
           auto x64 = std::get<feelelf::Elf64_Section_Header_t>(o);
           fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
                      "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = header.getSectionHeaderName(x64.name),
-                     "type"_a = header.getSectionHeaderType(x64.type), "address"_a = x64.addr,
-                     "offset"_a = x64.offset, "size"_a = x64.size, "entrySize"_a = x64.entsize,
-                     "flags"_a = header.getSectionHeaderFlags(x64.flags), "link"_a = x64.link,
-                     "info"_a = x64.info, "align"_a = x64.addralign);
+                     "type"_a = header.getSectionHeaderType(x64.type), "address"_a = x64.addr, "offset"_a = x64.offset,
+                     "size"_a = x64.size, "entrySize"_a = x64.entsize,
+                     "flags"_a = header.getSectionHeaderFlags(x64.flags), "link"_a = x64.link, "info"_a = x64.info,
+                     "align"_a = x64.addralign);
         }
 
       } else {
-        fmt::print("  {} {:<17} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name",
-                   "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
+        fmt::print("  {} {:<17} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name", "Type",
+                   "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &o : header.sectionHeaders()) {
           auto x86 = std::get<feelelf::Elf32_Section_Header_t>(o);
           fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>08x} {offset:>06x} {size:>06x} "
                      "{entrySize:<9x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = header.getSectionHeaderName(x86.name),
-                     "type"_a = header.getSectionHeaderType(x86.type), "address"_a = x86.addr,
-                     "offset"_a = x86.offset, "size"_a = x86.size, "entrySize"_a = x86.entsize,
-                     "flags"_a = header.getSectionHeaderFlags(x86.flags), "link"_a = x86.link,
-                     "info"_a = x86.info, "align"_a = x86.addralign);
+                     "type"_a = header.getSectionHeaderType(x86.type), "address"_a = x86.addr, "offset"_a = x86.offset,
+                     "size"_a = x86.size, "entrySize"_a = x86.entsize,
+                     "flags"_a = header.getSectionHeaderFlags(x86.flags), "link"_a = x86.link, "info"_a = x86.info,
+                     "align"_a = x86.addralign);
         }
       }
 
