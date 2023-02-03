@@ -204,44 +204,25 @@ auto FileHeader::sectionHeaders() noexcept -> decltype(section_headers) const & 
   return section_headers;
 }
 
-
-auto FileHeader::getProgramHeaderType(const std::size_t i) const noexcept -> std::string_view {
+std::string typei(unsigned i) {
   // clang-format off
+
   switch(i) {
-  case 0: return "NULL";                  // program header table entry
-  case 1: return "LOAD";                  // loadable program segment
-  case 2: return "DYNAMIC";               // dynamic linking informatio
-  case 3: return "INTERP";                // program interpreter
-  case 4: return "NOTE";                  // auxiliary information
-  case 5: return "SHLIB";                 // reserved
-  case 6: return "PHDR";                  // entry for header table its
-  case 7: return "TLS";                   // thread-local storage segme
-  case 8: return "NUM";                   // number of defined types
-  case 0x60000000: return "LOOS";         // start of OS-specific
-  case 0x6474e550: return "GNU_EH_FRAME"; // GCC .eh_frame_hdr segment
-  case 0x6474e551: return "GNU_STACK";    // indicates stack executabil
-  case 0x6474e552: return "GNU_RELRO";    // read-only after relocation
-  // case 0x6ffffffa: return "LOSUNW";    //
-  case 0x6ffffffa: return "SUNWBSS";      // Sun Specific segment
-  case 0x6ffffffb: return "SUNWSTACK";    // stack segment
-  //case 0x6fffffff: return "HISUNW";     //
-  case 0x6FFfffff: return "HIOS";         // end of OS-specific
-  case 0x70000000: return "LOPROC";       // start of processor-specific
-  case 0x7fffffff: return "HIPROC";       // end of processor-specific
+  case 0: return "NOTYPE";     /* Symbol type is unspecified */
+  case 1: return "OBJECT";     /* Symbol is a data object */
+  case 2: return "FUNC";       /* Symbol is a code object */
+  case 3: return "SECTION";    /* Symbol associated with a section */
+  case 4: return "FILE";       /* Symbol's name is file name */
+  case 5: return "COMMON";     /* Symbol is a common data object */
+  case 6: return "TLS";        /* Symbol is thread-local data object*/
+  case 7: return "NUM";        /* Number of defined types.  */
+//case 10: return "LOOS";      /* Start of OS-specific */
+  case 10: return "GNU_IFUNC"; /* Symbol is indirect code object */
+//case 12: return "HIOS";      /* End of OS-specific */
+  case 13: return "LOPROC";    /* Start of processor-specific */
+  case 15: return "HIPROC";    /* End of processor-specific */
   }
-}
-
-std::string phFlagStr;
-auto FileHeader::getProgramHeaderFlag(const std::size_t phFlag) const noexcept -> std::string_view {
-  phFlagStr.clear();
-
-  if(phFlag & (1 << 0)) phFlagStr.push_back('X');
-  if(phFlag & (1 << 1)) phFlagStr.push_back('W');
-  if(phFlag & (1 << 2)) phFlagStr.push_back('R');
-  // if(phFlags & 0x0ff00000) REVISIT: handle OS-specific
-  // if(phFlags & 0xf0000000) REVISIT: handle processor-specific
-
-  return phFlagStr.c_str();
+  // clang-format on
 }
 
 auto FileHeader::flags() const noexcept -> int {
@@ -298,12 +279,12 @@ auto FileHeader::hasSectionHeaders() const noexcept -> bool {
                     elf_header);
 }
 
-constexpr std::array<Elf_byte,4> identification_bytes{0x7f, 'E', 'L', 'F'};
+constexpr std::array<Elf_byte, 4> identification_bytes{0x7f, 'E', 'L', 'F'};
 
 auto FileHeader::isELF() const noexcept -> bool {
   fin.seekg(0);
 
-  std::array<Elf_byte,4> buf{};
+  std::array<Elf_byte, 4> buf{};
   fin.read(reinterpret_cast<char *>(buf.data()), std::size(buf) * sizeof(Elf_byte));
 
   return identification_bytes == buf;
@@ -316,8 +297,61 @@ auto FileHeader::is64bit() const noexcept -> bool {
   return temp == 2;
 }
 
-// Legal values for sh_type (section type).
-auto FileHeader::getSectionHeaderType(const std::size_t shType) const noexcept -> std::string_view {
+std::string shNameStr;
+auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view {
+  const auto offset =
+      std::visit(overloaded{[shName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
+                            [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
+                 section_headers[sectionHeaderStringTableIndex()]);
+
+  fin.seekg(offset);
+
+  shNameStr.clear();
+  std::getline(fin, shNameStr, '\0');
+
+  return shNameStr.c_str();
+}
+
+auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view {
+  // clang-format off
+  switch(phType) {
+  case 0: return "NULL";                  // program header table entry
+  case 1: return "LOAD";                  // loadable program segment
+  case 2: return "DYNAMIC";               // dynamic linking informatio
+  case 3: return "INTERP";                // program interpreter
+  case 4: return "NOTE";                  // auxiliary information
+  case 5: return "SHLIB";                 // reserved
+  case 6: return "PHDR";                  // entry for header table its
+  case 7: return "TLS";                   // thread-local storage segme
+  case 8: return "NUM";                   // number of defined types
+  case 0x60000000: return "LOOS";         // start of OS-specific
+  case 0x6474e550: return "GNU_EH_FRAME"; // GCC .eh_frame_hdr segment
+  case 0x6474e551: return "GNU_STACK";    // indicates stack executabil
+  case 0x6474e552: return "GNU_RELRO";    // read-only after relocation
+  // case 0x6ffffffa: return "LOSUNW";    //
+  case 0x6ffffffa: return "SUNWBSS";      // Sun Specific segment
+  case 0x6ffffffb: return "SUNWSTACK";    // stack segment
+  //case 0x6fffffff: return "HISUNW";     //
+  case 0x6FFfffff: return "HIOS";         // end of OS-specific
+  case 0x70000000: return "LOPROC";       // start of processor-specific
+  case 0x7fffffff: return "HIPROC";       // end of processor-specific
+  }
+}
+
+std::string phFlagStr;
+auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view {
+  phFlagStr.clear();
+
+  if(phFlag & (1 << 0)) phFlagStr.push_back('X');
+  if(phFlag & (1 << 1)) phFlagStr.push_back('W');
+  if(phFlag & (1 << 2)) phFlagStr.push_back('R');
+  // if(phFlags & 0x0ff00000) REVISIT: handle OS-specific
+  // if(phFlags & 0xf0000000) REVISIT: handle processor-specific
+
+  return phFlagStr.c_str();
+}
+
+auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view {
   // clang-format off
   switch(shType) {
   case 0:          return "NULL";           // Section header table entry unused
@@ -360,39 +394,24 @@ auto FileHeader::getSectionHeaderType(const std::size_t shType) const noexcept -
   // clang-format on
 }
 
-std::string shNameStr;
-auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view {
-  const auto offset =
-      std::visit(overloaded{[shName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
-                            [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
-                 section_headers[sectionHeaderStringTableIndex()]);
-
-  fin.seekg(offset);
-
-  shNameStr.clear();
-  std::getline(fin, shNameStr, '\0');
-
-  return shNameStr.c_str();
-}
-
 std::string shFlagsStr;
-auto FileHeader::getSectionHeaderFlags(const std::size_t shFlags) const noexcept -> std::string_view {
+auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view {
   shFlagsStr.clear();
-  if(shFlags & (1 << 0)) shFlagsStr.push_back('W');    // writable
-  if(shFlags & (1 << 1)) shFlagsStr.push_back('A');    // occupies memory during execution
-  if(shFlags & (1 << 2)) shFlagsStr.push_back('X');    // executable
-  if(shFlags & (1 << 4)) shFlagsStr.push_back('M');    // might be merged
-  if(shFlags & (1 << 5)) shFlagsStr.push_back('S');    // contains nul-terminated strings
-  if(shFlags & (1 << 6)) shFlagsStr.push_back('I');    // sh_info contains SHT index
-  if(shFlags & (1 << 7)) shFlagsStr.push_back('L');    // preserve order after combining
-  if(shFlags & (1 << 8)) shFlagsStr.push_back('O');    // non-standard OS specific handling required
-  if(shFlags & (1 << 9)) shFlagsStr.push_back('G');    // section is member of a group
-  if(shFlags & (1 << 10)) shFlagsStr.push_back('T');   // section hold thread-local data
-  if(shFlags & (1 << 11)) shFlagsStr.push_back('C');   // section with compressed data
-  if(shFlags == 0x0ff00000) shFlagsStr.push_back('o'); // OS-specific
-  if(shFlags == 0xf0000000) shFlagsStr.push_back('p'); // processor-specific
-  if(shFlags & (1 << 30)) shFlagsStr.push_back('?');   // (Revisit '?') special ordering requirement (Solaris)
-  if(shFlags & (1 << 31)) shFlagsStr.push_back('E');   // excluded unless referenced or allocated (Solaris)
+  if(shFlag & (1 << 0)) shFlagsStr.push_back('W');    // writable
+  if(shFlag & (1 << 1)) shFlagsStr.push_back('A');    // occupies memory during execution
+  if(shFlag & (1 << 2)) shFlagsStr.push_back('X');    // executable
+  if(shFlag & (1 << 4)) shFlagsStr.push_back('M');    // might be merged
+  if(shFlag & (1 << 5)) shFlagsStr.push_back('S');    // contains nul-terminated strings
+  if(shFlag & (1 << 6)) shFlagsStr.push_back('I');    // sh_info contains SHT index
+  if(shFlag & (1 << 7)) shFlagsStr.push_back('L');    // preserve order after combining
+  if(shFlag & (1 << 8)) shFlagsStr.push_back('O');    // non-standard OS specific handling required
+  if(shFlag & (1 << 9)) shFlagsStr.push_back('G');    // section is member of a group
+  if(shFlag & (1 << 10)) shFlagsStr.push_back('T');   // section hold thread-local data
+  if(shFlag & (1 << 11)) shFlagsStr.push_back('C');   // section with compressed data
+  if(shFlag == 0x0ff00000) shFlagsStr.push_back('o'); // OS-specific
+  if(shFlag == 0xf0000000) shFlagsStr.push_back('p'); // processor-specific
+  if(shFlag & (1 << 30)) shFlagsStr.push_back('?');   // (Revisit '?') special ordering requirement (Solaris)
+  if(shFlag & (1 << 31)) shFlagsStr.push_back('E');   // excluded unless referenced or allocated (Solaris)
   return shFlagsStr.c_str();
 }
 

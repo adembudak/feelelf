@@ -177,9 +177,6 @@ public:
   [[nodiscard]] auto programHeaders() noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders() noexcept -> decltype(section_headers) const &;
 
-  [[nodiscard]] auto getProgramHeaderType(const std::size_t phType) const noexcept -> std::string_view;
-  [[nodiscard]] auto getProgramHeaderFlag(const std::size_t phFlag) const noexcept -> std::string_view;
-
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
 
@@ -189,10 +186,7 @@ public:
   [[nodiscard]] auto sectionHeaderEntrySize() const noexcept -> std::size_t;
   [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
   [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
-
-  [[nodiscard]] auto getSectionHeaderType(const std::size_t shType)   const noexcept -> std::string_view;
-  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName)   const noexcept -> std::string_view;
-  [[nodiscard]] auto getSectionHeaderFlags(const std::size_t shFlags) const noexcept -> std::string_view;
+  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view;
 
 private:
   [[nodiscard]] auto hasProgramHeaders() const noexcept -> bool;
@@ -201,6 +195,13 @@ private:
   [[nodiscard]] auto isELF()   const noexcept -> bool;
   [[nodiscard]] auto is64bit() const noexcept -> bool;
 };
+
+[[nodiscard]] auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view;
+[[nodiscard]] auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view;
+
+[[nodiscard]] auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view;
+[[nodiscard]] auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view;
+
 
 static_assert(std::copyable<FileHeader>);
 static_assert(std::movable<FileHeader>);
