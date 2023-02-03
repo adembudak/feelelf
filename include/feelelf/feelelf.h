@@ -160,45 +160,46 @@ public:
   auto decode() noexcept -> void;
 
   // clang-format off
-  [[nodiscard]] auto identificationArray() noexcept -> std::span<Elf_byte> const; // ident
-  [[nodiscard]] auto fileClass()        noexcept -> std::string_view const; // ident[i_class]
-  [[nodiscard]] auto fileDataEncoding() noexcept -> std::string_view const; // ident[i_data]
-  [[nodiscard]] auto fileVersion()      noexcept -> std::string_view const; // ident[i_version]
-  [[nodiscard]] auto osABI()            noexcept -> std::string_view const; // ident[i_osabi]
-  [[nodiscard]] auto ABIVersion()       noexcept -> int;                    // ident[i_abiversion]
+  [[nodiscard]] auto identificationArray() const noexcept -> std::span<const Elf_byte>; // ident
+  [[nodiscard]] auto fileClass()           const noexcept -> std::string_view;    // ident[i_class]
+  [[nodiscard]] auto fileDataEncoding()    const noexcept -> std::string_view;    // ident[i_data]
+  [[nodiscard]] auto fileVersion() const noexcept -> std::string_view;            // ident[i_version]
+  [[nodiscard]] auto osABI()       const noexcept -> std::string_view;            // ident[i_osabi]
+  [[nodiscard]] auto ABIVersion()  const noexcept -> int;                         // ident[i_abiversion]
 
-  [[nodiscard]] auto type()                noexcept -> std::string_view const;
-  [[nodiscard]] auto machine()             noexcept -> std::string_view const;
-  [[nodiscard]] auto version()             noexcept -> int const;
-  [[nodiscard]] auto entryPoint()          noexcept -> int const;
-  [[nodiscard]] auto programHeaderOffset() noexcept -> std::size_t const;
-  [[nodiscard]] auto sectionHeaderOffset() noexcept -> std::size_t const;
+  [[nodiscard]] auto type()                const noexcept -> std::string_view;
+  [[nodiscard]] auto machine()             const noexcept -> std::string_view;
+  [[nodiscard]] auto version()             const noexcept -> int;
+  [[nodiscard]] auto entryPoint()          const noexcept -> int;
+  [[nodiscard]] auto programHeaderOffset() const noexcept -> std::size_t;
+  [[nodiscard]] auto sectionHeaderOffset() const noexcept -> std::size_t;
 
-  [[nodiscard]] auto programHeaders()    noexcept -> const decltype(program_headers) &;
-  [[nodiscard]] auto sectionHeaders()    noexcept -> const decltype(section_headers) &;
+  [[nodiscard]] auto programHeaders() noexcept -> const decltype(program_headers) &;
+  [[nodiscard]] auto sectionHeaders() noexcept -> decltype(section_headers) const &;
 
-  [[nodiscard]] auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view const;
-  [[nodiscard]] auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view const;
+  [[nodiscard]] auto getProgramHeaderType(const std::size_t phType) const noexcept -> std::string_view;
+  [[nodiscard]] auto getProgramHeaderFlag(const std::size_t phFlag) const noexcept -> std::string_view;
 
-  [[nodiscard]] auto flags()             noexcept -> int const;
-  [[nodiscard]] auto headerSize()        noexcept -> int const;
+  [[nodiscard]] auto flags()      const noexcept -> int;
+  [[nodiscard]] auto headerSize() const noexcept -> int;
 
-  [[nodiscard]] auto programHeaderSize() noexcept -> int const;
-  [[nodiscard]] auto numProgramHeaders() noexcept -> int const;
+  [[nodiscard]] auto programHeaderSize() const noexcept -> int;
+  [[nodiscard]] auto numProgramHeaders() const noexcept -> int;
 
-  [[nodiscard]] auto sectionHeaderEntrySize() noexcept -> std::size_t const;
-  [[nodiscard]] auto numSectionHeaders() noexcept -> int const;
-  [[nodiscard]] auto sectionHeaderStringTableIndex() noexcept -> int const;
+  [[nodiscard]] auto sectionHeaderEntrySize() const noexcept -> std::size_t;
+  [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
+  [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
 
-  [[nodiscard]] auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view const;
-  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName) noexcept -> std::string_view const;
-  [[nodiscard]] auto getSectionHeaderFlags(const std::size_t shFlags) noexcept -> std::string_view const;
+  [[nodiscard]] auto getSectionHeaderType(const std::size_t shType)   const noexcept -> std::string_view;
+  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName)   const noexcept -> std::string_view;
+  [[nodiscard]] auto getSectionHeaderFlags(const std::size_t shFlags) const noexcept -> std::string_view;
 
 private:
-  [[nodiscard]] auto hasProgramHeaders() noexcept -> bool const;
-  [[nodiscard]] auto hasSectionHeaders() noexcept -> bool const;
-  [[nodiscard]] auto isELF() noexcept -> bool const;
-  [[nodiscard]] auto is64bit() noexcept -> bool const;
+  [[nodiscard]] auto hasProgramHeaders() const noexcept -> bool;
+  [[nodiscard]] auto hasSectionHeaders() const noexcept -> bool;
+
+  [[nodiscard]] auto isELF()   const noexcept -> bool;
+  [[nodiscard]] auto is64bit() const noexcept -> bool;
 };
 
 static_assert(std::copyable<FileHeader>);
