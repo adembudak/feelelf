@@ -188,6 +188,7 @@ public:
   [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
   [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
   [[nodiscard]] auto getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view;
+  [[nodiscard]] auto getSymbolName(const std::size_t symName) const noexcept -> std::string_view;
 
 private:
   [[nodiscard]] auto hasProgramHeaders() const noexcept -> bool;

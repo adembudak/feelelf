@@ -100,7 +100,19 @@ int main(int argc, const char *argv[]) {
       fmt::print("Program Headers:\n");
       if(!header.programHeaders().empty()) {
 
-        if(std::holds_alternative<feelelf::Elf64_Program_Header_t>(header.programHeaders()[0])) {
+        if(std::holds_alternative<feelelf::Elf32_Program_Header_t>(header.programHeaders()[0])) {
+          fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr", "PhysAddr",
+                     "FileSiz", "MemSiz", "Flags", "Align");
+
+          for(const auto &o : header.programHeaders()) {
+            auto x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
+            fmt::print("{:<14} {:#08x} {:#010x} {:#010x} {:#07x} {:#07x} {:<6} {:#0x}\n",
+                       feelelf::getProgramHeaderType(x86.type), x86.offset, x86.vaddr, x86.paddr, x86.filesz, x86.memsz,
+                       feelelf::getProgramHeaderFlag(x86.flags), x86.align);
+          }
+        }
+
+        else {
 
           fmt::print("{:^14} {:^16} {:^16} {:^16} {:^16} {:^16} {:<7} {:<8}\n", "Type", "Offset", "VirtAddr",
                      "PhysAddr", "FileSize", "MemSize", "Flags", "Align");
@@ -112,19 +124,6 @@ int main(int argc, const char *argv[]) {
                        feelelf::getProgramHeaderFlag(x64.flags), x64.align);
           }
         }
-
-        else {
-
-          fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr", "PhysAddr",
-                     "FileSiz", "MemSiz", "Flags", "Align");
-
-          for(const auto &o : header.programHeaders()) {
-            auto x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
-            fmt::print("{:<14} {:#08x} {:#010x} {:#010x} {:#07x} {:#07x} {:<6} {:#0x}\n",
-                       feelelf::getProgramHeaderType(x86.type), x86.offset, x86.vaddr, x86.paddr, x86.filesz, x86.memsz,
-                       feelelf::getProgramHeaderFlag(x86.flags), x86.align);
-          }
-        }
       }
     }
 
@@ -134,22 +133,7 @@ int main(int argc, const char *argv[]) {
 
       fmt::print("Section Headers:\n");
 
-      if(std::holds_alternative<feelelf::Elf64_Section_Header_t>(header.sectionHeaders()[0])) {
-        fmt::print("  {} {:<17} {:<15} {:<16} {:<8} {:<16} {:<16} {:<5} {:<4} {:<4} {}\n", //
-                   "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
-
-        for(int i = 0; const auto &o : header.sectionHeaders()) {
-          auto x64 = std::get<feelelf::Elf64_Section_Header_t>(o);
-          fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
-                     "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
-                     "num"_a = i++, "name"_a = header.getSectionHeaderName(x64.name),
-                     "type"_a = feelelf::getSectionHeaderType(x64.type), "address"_a = x64.addr,
-                     "offset"_a = x64.offset, "size"_a = x64.size, "entrySize"_a = x64.entsize,
-                     "flags"_a = feelelf::getSectionHeaderFlag(x64.flags), "link"_a = x64.link, "info"_a = x64.info,
-                     "align"_a = x64.addralign);
-        }
-
-      } else {
+      if(std::holds_alternative<feelelf::Elf32_Section_Header_t>(header.sectionHeaders()[0])) {
         fmt::print("  {} {:<17} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name", "Type",
                    "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
@@ -163,6 +147,21 @@ int main(int argc, const char *argv[]) {
                      "flags"_a = feelelf::getSectionHeaderFlag(x86.flags), "link"_a = x86.link, "info"_a = x86.info,
                      "align"_a = x86.addralign);
         }
+
+      } else {
+        fmt::print("  {} {:<17} {:<15} {:<16} {:<8} {:<16} {:<16} {:<5} {:<4} {:<4} {}\n", //
+                   "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
+
+        for(int i = 0; const auto &o : header.sectionHeaders()) {
+          auto x64 = std::get<feelelf::Elf64_Section_Header_t>(o);
+          fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
+                     "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
+                     "num"_a = i++, "name"_a = header.getSectionHeaderName(x64.name),
+                     "type"_a = feelelf::getSectionHeaderType(x64.type), "address"_a = x64.addr,
+                     "offset"_a = x64.offset, "size"_a = x64.size, "entrySize"_a = x64.entsize,
+                     "flags"_a = feelelf::getSectionHeaderFlag(x64.flags), "link"_a = x64.link, "info"_a = x64.info,
+                     "align"_a = x64.addralign);
+        }
       }
 
       fmt::print("\nKey to Flags:\n"
@@ -175,19 +174,37 @@ int main(int argc, const char *argv[]) {
     if(show_symbols) {
       const auto symbols = header.symbols();
 
-      if(!symbols.empty()) {
-        fmt::print("   Num:     Value  Size Type    Bind      Visibility   Index Name\n");
-        for(int i = 0; const auto &sym : symbols) {
-          if(std::holds_alternative<feelelf::Elf32_Symbol_t>(sym)) {
+      if(!std::empty(symbols)) {
+        if(std::holds_alternative<feelelf::Elf32_Symbol_t>(symbols[0])) {
+
+          fmt::print("   {num} {value:^8} {size:>4} {type:^7} {bind:<5} {vis:^10} {index:>5} {name}\n",
+                     "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
+                     "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
+
+          for(int i = 0; const auto &sym : symbols) {
             const auto x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
-            fmt::print("   {num:>3}: {value:<#010x} {size:>4} {type:<8} {binding:<6} {visibility:<10} {index:<10} "
-                       "{name:<10} \n",
+            fmt::print("   {num:>3}: {value:<08x} {size:>4} {type:<7} {binding:<6} {visibility:<9} {index:<5} "
+                       "{name} \n",
                        "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
                        "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
                        "visibility"_a = feelelf::getSymbolVisibility(x86.other), "index"_a = x86.shndx,
-                       "name"_a = x86.name);
-          } else {
-            // todo
+                       "name"_a = header.getSymbolName(x86.name));
+          }
+        }
+
+        else {
+          fmt::print("   {num} {value:^15} {size:>5} {type:^6} {bind:^6} {vis:<8} {index:>5} {name}\n",
+                     "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
+                     "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
+
+          for(int i = 0; const auto &sym : symbols) {
+            const auto x64 = std::get<feelelf::Elf64_Symbol_t>(sym);
+            fmt::print(
+                "   {num:>3}: {value:>016x} {size:>4} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
+                "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size, "type"_a = feelelf::getSymbolType(x64.info),
+                "binding"_a = feelelf::getSymbolBind(x64.info),
+                "visibility"_a = feelelf::getSymbolVisibility(x64.other), "index"_a = x64.shndx,
+                "name"_a = header.getSymbolName(x64.name));
           }
         }
       }

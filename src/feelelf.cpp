@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -33,7 +34,7 @@ auto FileHeader::decode() noexcept -> void {
   std::visit(
     overloaded{
       [&](Elf32_Header_t &x32) {
-            fin.read(reinterpret_cast<char*>(&x32),  sizeof(decltype(x32)));
+            fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32)));
 
             program_headers.resize(x32.phNumber, Elf32_Program_Header_t{});
             section_headers.resize(x32.shNumber,Elf32_Section_Header_t{} );
@@ -223,8 +224,8 @@ auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
                        Elf32_Symbol_t symbol{};
                        for(int i = 0; i < size; ++i) {
                          fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
-                           symbols.push_back(symbol);
-                         }
+                         symbols.push_back(symbol);
+                       }
                      }, 
                   [&](const Elf64_Section_Header_t &x64) {
                         fin.seekg(x64.offset);
@@ -325,6 +326,19 @@ auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -
   std::getline(fin, shNameStr, '\0');
 
   return shNameStr.c_str();
+}
+
+std::string symNameStr;
+auto FileHeader::getSymbolName(const std::size_t symName) const noexcept -> std::string_view {
+  const auto offset =
+      std::visit(overloaded{[symName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + symName; },
+                            [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }},
+                 section_headers[sectionHeaderStringTableIndex() -1]);
+
+  fin.seekg(offset);
+  std::getline(fin, symNameStr, '\0');
+
+  return symNameStr.c_str();
 }
 
 auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view {
