@@ -134,12 +134,12 @@ int main(int argc, const char *argv[]) {
       fmt::print("Section Headers:\n");
 
       if(std::holds_alternative<feelelf::Elf32_Section_Header_t>(header.sectionHeaders()[0])) {
-        fmt::print("  {} {:<17} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name", "Type",
+        fmt::print("  {} {:<18} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name", "Type",
                    "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &o : header.sectionHeaders()) {
           auto x86 = std::get<feelelf::Elf32_Section_Header_t>(o);
-          fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>08x} {offset:>06x} {size:>06x} "
+          fmt::print("  [{num:>2}] {name:<18} {type:<15} {address:>08x} {offset:>06x} {size:>06x} "
                      "{entrySize:<9x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = header.getSectionHeaderName(x86.name),
                      "type"_a = feelelf::getSectionHeaderType(x86.type), "address"_a = x86.addr,
@@ -149,12 +149,12 @@ int main(int argc, const char *argv[]) {
         }
 
       } else {
-        fmt::print("  {} {:<17} {:<15} {:<16} {:<8} {:<16} {:<16} {:<5} {:<4} {:<4} {}\n", //
+        fmt::print("  {} {:<18} {:<15} {:<16} {:<8} {:<16} {:<16} {:<5} {:<4} {:<4} {}\n", //
                    "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &o : header.sectionHeaders()) {
           auto x64 = std::get<feelelf::Elf64_Section_Header_t>(o);
-          fmt::print("  [{num:>2}] {name:<17} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
+          fmt::print("  [{num:>2}] {name:<18} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
                      "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = header.getSectionHeaderName(x64.name),
                      "type"_a = feelelf::getSectionHeaderType(x64.type), "address"_a = x64.addr,

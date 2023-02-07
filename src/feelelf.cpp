@@ -329,11 +329,25 @@ auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -
 }
 
 std::string symNameStr;
-auto FileHeader::getSymbolName(const std::size_t symName) const noexcept -> std::string_view {
+auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::string_view {
+
+  std::size_t sectionTableIndex = 0;
+  const auto sections = sectionHeaders();
+  for(std::size_t i = 0; i < sections.size(); ++i) {
+      const auto name = std::visit(overloaded{[](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.name; },
+                                              [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.name; }}, 
+                                     sections[i]);
+
+      if(getSectionHeaderName(name) == ".strtab")  {
+        sectionTableIndex = i; 
+        break;
+      }
+  }
+
   const auto offset =
       std::visit(overloaded{[symName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + symName; },
                             [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }},
-                 section_headers[sectionHeaderStringTableIndex() -1]);
+                 section_headers[sectionTableIndex]);
 
   fin.seekg(offset);
   std::getline(fin, symNameStr, '\0');
