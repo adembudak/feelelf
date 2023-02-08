@@ -128,8 +128,10 @@ auto FileHeader::type() const noexcept -> std::string_view {
   case 2: return "Executable file";
   case 3: return "Shared object file";
   case 4: return "Core file";
-  case 0xff00: return "Processor specific";
-  case 0xffff: return "Processor specific";
+  }
+
+  if(0xff00 >= fileType && fileType <= 0xffff) {
+    return "Processor specific";
   }
 }
 
@@ -356,31 +358,40 @@ auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::strin
 }
 
 auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view {
-  // clang-format off
   switch(phType) {
-  case 0: return "NULL";                  // program header table entry
-  case 1: return "LOAD";                  // loadable program segment
-  case 2: return "DYNAMIC";               // dynamic linking informatio
-  case 3: return "INTERP";                // program interpreter
-  case 4: return "NOTE";                  // auxiliary information
-  case 5: return "SHLIB";                 // reserved
-  case 6: return "PHDR";                  // entry for header table its
-  case 7: return "TLS";                   // thread-local storage segme
-  case 8: return "NUM";                   // number of defined types
-  case 0x60000000: return "LOOS";         // start of OS-specific
-  case 0x6474e550: return "GNU_EH_FRAME"; // GCC .eh_frame_hdr segment
-  case 0x6474e551: return "GNU_STACK";    // indicates stack executabil
-  case 0x6474e552: return "GNU_RELRO";    // read-only after relocation
-  // case 0x6ffffffa: return "LOSUNW";    //
-  case 0x6ffffffa: return "SUNWBSS";      // Sun Specific segment
-  case 0x6ffffffb: return "SUNWSTACK";    // stack segment
-  //case 0x6fffffff: return "HISUNW";     //
-  case 0x6FFfffff: return "HIOS";         // end of OS-specific
-  case 0x70000000: return "LOPROC";       // start of processor-specific
-  case 0x7fffffff: return "HIPROC";       // end of processor-specific
+  case 0: return "NULL";    // program header table entry
+  case 1: return "LOAD";    // loadable program segment
+  case 2: return "DYNAMIC"; // dynamic linking informatio
+  case 3: return "INTERP";  // program interpreter
+  case 4: return "NOTE";    // auxiliary information
+  case 5: return "SHLIB";   // reserved
+  case 6: return "PHDR";    // entry for header table its
+  case 7: return "TLS";     // thread-local storage segme
+  case 8: return "NUM";     // number of defined types
+  }
+
+  if(phType >= 0x60000000 && phType <= 0x6fffffff) { // start-end of OS-specific
+    switch(phType) {
+    case 0x6474e550: return "GNU_EH_FRAME"; // GCC .eh_frame_hdr segment
+    case 0x6474e551: return "GNU_STACK";    // indicates stack executabil
+    case 0x6474e552: return "GNU_RELRO";    // read-only after relocation
+    }
+
+    if(phType >= 0x6ffffffa && phType <= 0x6fffffff) { // [LOSUNW, HISUNW]
+      switch(phType) {
+      case 0x6ffffffa: return "SUNWBSS";   // Sun Specific segment
+      case 0x6ffffffb: return "SUNWSTACK"; // stack segment
+      }
+    }
+    return "LOOS";
+  }
+
+  if(phType >= 0x70000000 && phType <= 0x7fff'ffff) { // start-end of processor-specific
+    return "processor specific";
   }
 }
 
+// clang-format off
 std::string phFlagStr;
 auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view {
   phFlagStr.clear();
@@ -397,44 +408,53 @@ auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view
 auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view {
   // clang-format off
   switch(shType) {
-  case 0:          return "NULL";           // Section header table entry unused
-  case 1:          return "PROGBITS";       // Program data
-  case 2:          return "SYMTAB";         // Symbol table
-  case 3:          return "STRTAB";         // String table
-  case 4:          return "RELA";           // Relocation entries with addends
-  case 5:          return "HASH";           // Symbol hash table
-  case 6:          return "DYNAMIC";        // Dynamic linking information
-  case 7:          return "NOTE";           // Notes
-  case 8:          return "NOBITS";         // Program space with no data (bss)
-  case 9:          return "REL";            // Relocation entries, no addends
-  case 10:         return "SHLIB";          // Reserved
-  case 11:         return "DYNSYM";         // Dynamic linker symbol table
-  case 14:         return "INIT_ARRAY";     // Array of constructors
-  case 15:         return "FINI_ARRAY";     // Array of destructors
-  case 16:         return "PREINIT_ARRAY";  // Array of pre-constructors
-  case 17:         return "GROUP";          // Section group
-  case 18:         return "SYMTAB_SHNDX";   // Extended section indeces
-  case 19:         return "NUM";            // Number of defined types.
-  case 0x60000000: return "LOOS";           // Start OS-specific.
-  case 0x6ffffff5: return "GNU_ATTRIBUTES"; // Object attributes.
-  case 0x6ffffff6: return "GNU_HASH";       // GNU-style hash table.
-  case 0x6ffffff7: return "GNU_LIBLIST";    // Prelink library list
-  case 0x6ffffff8: return "CHECKSUM";       // Checksum for DSO content.
-  case 0x6ffffffa: return "LOSUNW";         // Sun-specific low bound.
-//case 0x6ffffffa: return "SUNW_move";      //
-  case 0x6ffffffb: return "SUNW_COMDAT";    //
-  case 0x6ffffffc: return "SUNW_syminfo";   //
-  case 0x6ffffffd: return "GNU_verdef";     // Version definition section.
-  case 0x6ffffffe: return "GNU_verneed";    // Version needs section.
-  case 0x6fffffff: return "GNU_versym";     // Version symbol table.
-//case 0x6fffffff: return "HISUNW";         // Sun-specific high bound.
-//case 0x6fffffff: return "HIOS";           // End OS-specific type
-  case 0x70000000: return "LOPROC";         // Start of processor-specific
-  case 0x7fffffff: return "HIPROC";         // End of processor-specific
-  case 0x80000000: return "LOUSER";         // Start of application-specific
-  case 0x8fffffff: return "HIUSER";         // End of application-specific
+  case 0:  return "NULL";           // Section header table entry unused
+  case 1:  return "PROGBITS";       // Program data
+  case 2:  return "SYMTAB";         // Symbol table
+  case 3:  return "STRTAB";         // String table
+  case 4:  return "RELA";           // Relocation entries with addends
+  case 5:  return "HASH";           // Symbol hash table
+  case 6:  return "DYNAMIC";        // Dynamic linking information
+  case 7:  return "NOTE";           // Notes
+  case 8:  return "NOBITS";         // Program space with no data (bss)
+  case 9:  return "REL";            // Relocation entries, no addends
+  case 10: return "SHLIB";          // Reserved
+  case 11: return "DYNSYM";         // Dynamic linker symbol table
+  case 14: return "INIT_ARRAY";     // Array of constructors
+  case 15: return "FINI_ARRAY";     // Array of destructors
+  case 16: return "PREINIT_ARRAY";  // Array of pre-constructors
+  case 17: return "GROUP";          // Section group
+  case 18: return "SYMTAB_SHNDX";   // Extended section indeces
+  case 19: return "NUM";            // Number of defined types.
   }
-  // clang-format on
+               
+  if(shType >= 0x60000000 && shType <= 0x6fffffff) { // [start-end] OS-specific
+    switch(shType) {
+    case 0x6ffffff5: return "GNU_ATTRIBUTES"; // Object attributes.
+    case 0x6ffffff6: return "GNU_HASH";       // GNU-style hash table.
+    case 0x6ffffff7: return "GNU_LIBLIST";    // Prelink library list
+    case 0x6ffffff8: return "CHECKSUM";       // Checksum for DSO content.
+    }
+
+    if(shType >= 0x6ffffffa && shType <= 0x6fffffff) { // [start-end] Sun-specific
+      switch(shType) {
+      case 0x6ffffffa: return "SUNW_move";      //
+      case 0x6ffffffb: return "SUNW_COMDAT";    //
+      case 0x6ffffffc: return "SUNW_syminfo";   //
+      case 0x6ffffffd: return "GNU_verdef";     // Version definition section.
+      case 0x6ffffffe: return "GNU_verneed";    // Version needs section.
+      case 0x6fffffff: return "GNU_versym";     // Version symbol table.
+      }
+    }
+  }
+
+  if(shType >= 0x70000000 && shType <= 0x7fffffff) {  // [start-end] processor specific
+    return "processor specific";
+  }
+
+  if(shType >= 0x80000000 && shType <= 0x8fffffff) {  // [start-end] processor specific
+    return "application specific";
+  }
 }
 
 std::string shFlagsStr;
@@ -459,7 +479,6 @@ auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view
 }
 
 auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view {
-  // clang-format off
   switch(symInfo & 0b1111) {
   case 0: return "NOTYPE";     // symbol type is unspecified
   case 1: return "OBJECT";     // symbol is a data object
@@ -469,13 +488,17 @@ auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view {
   case 5: return "COMMON";     // symbol is a common data object
   case 6: return "TLS";        // symbol is thread-local data object
   case 7: return "NUM";        // number of defined types
-//case 10: return "LOOS";      // start of OS-specific
-  case 10: return "GNU_IFUNC"; // symbol is indirect code object
-//case 12: return "HIOS";      // end of OS-specific
-  case 13: return "LOPROC";    // start of processor-specific
-  case 15: return "HIPROC";    // end of processor-specific
   }
-  // clang-format on
+
+  if(symInfo >= 10 && symInfo <= 12) { // [start, end] OS-specific
+    switch(symInfo) {
+    case 10: return "GNU_IFUNC"; // symbol is indirect code object
+    }
+  }
+
+  if(symInfo >= 13 && symInfo <= 15) { // [start, end] processor-specific
+    return "processor-specific";
+  }
 }
 
 auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view {
@@ -484,12 +507,17 @@ auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view {
   case 1: return "GLOBAL";  // global symbol
   case 2: return "WEAK";    // weak symbol
   case 3: return "NUM";     // number of defined types.
-  case 10: return "LOOS";   // start of OS-specific
-  case 12: return "HIOS";   // end of OS-specific
-  case 13: return "LOPROC"; // start of processor-specific
-  case 15: return "HIPROC"; // end of processor-specific
   }
-  // case 10: return "GNU_UNIQUE"; i// Unique symbol.
+
+  if(symInfo >= 10 && symInfo <= 12) { // [start, end] OS-specific
+    switch(symInfo) {
+    case 10: return "GNU_UNIQUE"; // Unique symbol.
+    }
+  }
+
+  if(symInfo >= 13 && symInfo <= 15) { // [start, end] processor-specific
+    return "";
+  }
 }
 
 auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
