@@ -177,13 +177,13 @@ int main(int argc, const char *argv[]) {
       if(!std::empty(symbols)) {
         if(std::holds_alternative<feelelf::Elf32_Symbol_t>(symbols[0])) {
 
-          fmt::print("   {num} {value:^8} {size:>4} {type:^7} {bind:<5} {vis:^10} {index:>5} {name}\n",
+          fmt::print("{num:>8} {value:^9} {size:>4} {type:^7} {bind:<5} {vis:^10} {index:>5} {name}\n",
                      "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
                      "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
 
           for(int i = 0; const auto &sym : symbols) {
             const auto x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
-            fmt::print("   {num:>3}: {value:<08x} {size:>4} {type:<7} {binding:<6} {visibility:<9} {index:<5} "
+            fmt::print("{num:>7}: {value:<08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} "
                        "{name} \n",
                        "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
                        "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
@@ -193,18 +193,17 @@ int main(int argc, const char *argv[]) {
         }
 
         else {
-          fmt::print("   {num} {value:^15} {size:>5} {type:^6} {bind:^6} {vis:<8} {index:>5} {name}\n",
+          fmt::print("{num:>8} {value:^17} {size:>4} {type:^6} {bind:^6} {vis:<8} {index:>5} {name}\n",
                      "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
                      "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
 
           for(int i = 0; const auto &sym : symbols) {
             const auto x64 = std::get<feelelf::Elf64_Symbol_t>(sym);
-            fmt::print(
-                "   {num:>3}: {value:>016x} {size:>4} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
-                "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size, "type"_a = feelelf::getSymbolType(x64.info),
-                "binding"_a = feelelf::getSymbolBind(x64.info),
-                "visibility"_a = feelelf::getSymbolVisibility(x64.other), "index"_a = x64.shndx,
-                "name"_a = header.getSymbolName(x64.name));
+            fmt::print("{num:>7}: {value:>016x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
+                       "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size,
+                       "type"_a = feelelf::getSymbolType(x64.info), "binding"_a = feelelf::getSymbolBind(x64.info),
+                       "visibility"_a = feelelf::getSymbolVisibility(x64.other), "index"_a = x64.shndx,
+                       "name"_a = header.getSymbolName(x64.name));
           }
         }
       }
