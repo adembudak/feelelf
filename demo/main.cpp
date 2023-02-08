@@ -18,6 +18,7 @@ int main(int argc, const char *argv[]) {
   bool show_segments = false;
   bool show_sections = false;
   bool show_symbols = false;
+  bool show_dynamic_symbols = false;
   bool show_headers = false;
 
   CLI::App app{{}, "readelf"};
@@ -35,6 +36,7 @@ int main(int argc, const char *argv[]) {
 
     app.add_flag("-s,--syms", show_symbols, "Display the symbol table");
     app.add_flag("--symbols", show_symbols, "An alias for --syms");
+    app.add_flag("--dyn-syms", show_dynamic_symbols, "Display the dynamic symbol table");
 
     app.add_flag("-e,--headers", show_headers, "Equivalent to: -h -l -s");
 
@@ -207,6 +209,10 @@ int main(int argc, const char *argv[]) {
           }
         }
       }
+    }
+
+    if(show_dynamic_symbols) {
+      //
     }
   }
 }
