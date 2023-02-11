@@ -129,7 +129,7 @@ auto FileHeader::type() const noexcept -> std::string_view {
   case 4: return "Core file";
   }
 
-  if(0xff00 >= fileType && fileType <= 0xffff) {
+  if(fileType >= 0xff00 && fileType <= 0xffff) {
     return "Processor specific";
   }
 }
@@ -187,25 +187,28 @@ auto FileHeader::sectionHeaderOffset() const noexcept -> std::size_t {
 
 // clang-format off
 auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & {
-  fin.seekg(programHeaderOffset());
+  if(programHeaderOffset() != 0) { // no program header if the offset is 0
+    fin.seekg(programHeaderOffset());
 
-  for(auto &ph : program_headers)
-    std::visit(overloaded{[](Elf32_Program_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
-                          [](Elf64_Program_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, ph);
+    for(auto &ph : program_headers)
+      std::visit(overloaded{[](Elf32_Program_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
+                            [](Elf64_Program_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, ph);
+  }
 
   return program_headers;
 }
 
 auto FileHeader::sectionHeaders() noexcept -> decltype(section_headers) const & {
-  fin.seekg(sectionHeaderOffset());
+  if(sectionHeaderOffset() != 0) {
+    fin.seekg(sectionHeaderOffset());
 
-  for(auto &sh : section_headers)
-    std::visit(overloaded{[](Elf32_Section_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
-                          [](Elf64_Section_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, sh);
+    for(auto &sh : section_headers)
+      std::visit(overloaded{[](Elf32_Section_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
+                            [](Elf64_Section_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, sh);
+  }
 
   return section_headers;
 }
-
 
 auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
   std::vector<Symbol_t> symbols;
@@ -275,17 +278,6 @@ auto FileHeader::sectionHeaderStringTableIndex() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shStringIndex; },
                                [](const Elf32_Header_t &x32) { return x32.shStringIndex; }}, elf_header);
 }
-
-auto FileHeader::hasProgramHeaders() const noexcept -> bool {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phOffset == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.phOffset == 0; }}, elf_header);
-}
-
-auto FileHeader::hasSectionHeaders() const noexcept -> bool {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shOffset == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.shOffset == 0; }}, elf_header);
-}
-
 
 auto FileHeader::isELF() const noexcept -> bool {
   const std::array<Elf_byte, 4> identification_bytes{0x7f, 'E', 'L', 'F'};

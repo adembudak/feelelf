@@ -191,9 +191,6 @@ public:
   [[nodiscard]] auto getSymbolName(const std::size_t symName) noexcept -> std::string_view;
 
 private:
-  [[nodiscard]] auto hasProgramHeaders() const noexcept -> bool;
-  [[nodiscard]] auto hasSectionHeaders() const noexcept -> bool;
-
   [[nodiscard]] auto isELF()   const noexcept -> bool;
   [[nodiscard]] auto is64bit() const noexcept -> bool;
 };
