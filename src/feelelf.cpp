@@ -174,8 +174,8 @@ auto FileHeader::entryPoint() const noexcept -> std::size_t {
 }
 
 auto FileHeader::programHeaderOffset() const noexcept -> std::size_t {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> size_t { return x32.phOffset; },
-                               [](const Elf64_Header_t &x64) -> size_t { return x64.phOffset; }},
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> std::size_t { return x32.phOffset; },
+                               [](const Elf64_Header_t &x64) -> std::size_t { return x64.phOffset; }},
                     elf_header);
 }
 
@@ -245,38 +245,38 @@ auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
 }
 
 auto FileHeader::flags() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.flags; },
-                               [](const Elf32_Header_t &x32) { return x32.flags; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.flags; },
+                               [](const Elf64_Header_t &x64) { return x64.flags; }}, elf_header);
 }
 
 auto FileHeader::headerSize() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.size; },
-                               [](const Elf32_Header_t &x32) { return x32.size; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.size; },
+                               [](const Elf64_Header_t &x64) { return x64.size; }}, elf_header);
 }
 
 auto FileHeader::programHeaderSize() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phEntrySize; },
-                               [](const Elf32_Header_t &x32) { return x32.phEntrySize; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.phEntrySize; },
+                               [](const Elf64_Header_t &x64) { return x64.phEntrySize; }}, elf_header);
 }
 
 auto FileHeader::numProgramHeaders() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phNumber; },
-                               [](const Elf32_Header_t &x32) { return x32.phNumber; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.phNumber; },
+                               [](const Elf64_Header_t &x64) { return x64.phNumber; }}, elf_header);
 }
 
 auto FileHeader::sectionHeaderEntrySize() const noexcept -> std::size_t {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shEntrySize; },
-                               [](const Elf32_Header_t &x32) { return x32.shEntrySize; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.shEntrySize; },
+                               [](const Elf64_Header_t &x64) { return x64.shEntrySize; }}, elf_header);
 }
 
 auto FileHeader::numSectionHeaders() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shNumber; },
-                               [](const Elf32_Header_t &x32) { return x32.shNumber; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.shNumber; },
+                               [](const Elf64_Header_t &x64) { return x64.shNumber; }}, elf_header);
 }
 
 auto FileHeader::sectionHeaderStringTableIndex() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shStringIndex; },
-                               [](const Elf32_Header_t &x32) { return x32.shStringIndex; }}, elf_header);
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.shStringIndex; },
+                               [](const Elf64_Header_t &x64) { return x64.shStringIndex; }}, elf_header);
 }
 
 auto FileHeader::isELF() const noexcept -> bool {
@@ -302,7 +302,7 @@ auto FileHeader::is64bit() const noexcept -> bool {
 std::string shNameStr;
 auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view {
   const auto offset =
-      std::visit(overloaded{[shName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
+      std::visit(overloaded{[shName](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset + shName; },
                             [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }}, section_headers[sectionHeaderStringTableIndex()]);
 
   fin.seekg(offset);
@@ -319,7 +319,7 @@ auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::strin
 
   const auto sections = sectionHeaders();
   for(std::size_t i = 0; i < sections.size(); ++i) {
-      const auto name = std::visit(overloaded{[](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.name; },
+      const auto name = std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.name; },
                                               [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.name; }}, sections[i]);
 
       if(getSectionHeaderName(name) == ".strtab")  {
@@ -329,7 +329,7 @@ auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::strin
   }
 
   const auto offset =
-      std::visit(overloaded{[symName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + symName; },
+      std::visit(overloaded{[symName](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset + symName; },
                             [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }}, section_headers[sectionTableIndex]);
 
   fin.seekg(offset);
