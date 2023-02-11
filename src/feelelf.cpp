@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
-#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -37,13 +36,13 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32)));
 
             program_headers.resize(x32.phNumber, Elf32_Program_Header_t{});
-            section_headers.resize(x32.shNumber,Elf32_Section_Header_t{} );
+            section_headers.resize(x32.shNumber, Elf32_Section_Header_t{});
       },
       [&](Elf64_Header_t &x64) {
             fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64)));
 
             program_headers.resize(x64.phNumber, Elf64_Program_Header_t{});
-            section_headers.resize(x64.shNumber,Elf64_Section_Header_t{} );
+            section_headers.resize(x64.shNumber, Elf64_Section_Header_t{});
       }
     }, elf_header);
   // clang-format on
@@ -191,7 +190,7 @@ auto FileHeader::programHeaders() noexcept -> const decltype(program_headers) & 
   fin.seekg(programHeaderOffset());
 
   for(auto &ph : program_headers)
-    std::visit(overloaded{[](Elf32_Program_Header_t &x86) { fin.read(reinterpret_cast<char *>(&x86), sizeof(decltype(x86))); },
+    std::visit(overloaded{[](Elf32_Program_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
                           [](Elf64_Program_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, ph);
 
   return program_headers;
@@ -201,7 +200,7 @@ auto FileHeader::sectionHeaders() noexcept -> decltype(section_headers) const & 
   fin.seekg(sectionHeaderOffset());
 
   for(auto &sh : section_headers)
-    std::visit(overloaded{[](Elf32_Section_Header_t &x86) { fin.read(reinterpret_cast<char *>(&x86), sizeof(decltype(x86))); },
+    std::visit(overloaded{[](Elf32_Section_Header_t &x32) { fin.read(reinterpret_cast<char *>(&x32), sizeof(decltype(x32))); },
                           [](Elf64_Section_Header_t &x64) { fin.read(reinterpret_cast<char *>(&x64), sizeof(decltype(x64))); }}, sh);
 
   return section_headers;
@@ -212,16 +211,15 @@ auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
   std::vector<Symbol_t> symbols;
 
   auto symbol_section = std::ranges::find_if(sectionHeaders(), [](const auto &section) {
-    return std::visit(overloaded{[](const Elf32_Section_Header_t &x86) { return x86.type; },
-                                 [](const Elf64_Section_Header_t &x64) { return x64.type; }},
-                      section) == 2;
+    return std::visit(overloaded{[](const Elf32_Section_Header_t &x32) { return x32.type; },
+                                 [](const Elf64_Section_Header_t &x64) { return x64.type; }}, section) == 2;
   });
 
   if(symbol_section != section_headers.end()) {
     std::visit(overloaded{
-                 [&](const Elf32_Section_Header_t &x86) {
-                       fin.seekg(x86.offset);
-                       const int size = x86.size / x86.entsize;
+                 [&](const Elf32_Section_Header_t &x32) {
+                       fin.seekg(x32.offset);
+                       const int size = x32.size / x32.entsize;
 
                        Elf32_Symbol_t symbol{};
                        for(int i = 0; i < size; ++i) {
@@ -245,61 +243,53 @@ auto FileHeader::symbols() noexcept -> std::vector<Symbol_t> const {
 
 auto FileHeader::flags() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.flags; },
-                               [](const Elf32_Header_t &x32) { return x32.flags; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.flags; }}, elf_header);
 }
 
 auto FileHeader::headerSize() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.size; },
-                               [](const Elf32_Header_t &x32) { return x32.size; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.size; }}, elf_header);
 }
 
 auto FileHeader::programHeaderSize() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phEntrySize; },
-                               [](const Elf32_Header_t &x32) { return x32.phEntrySize; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.phEntrySize; }}, elf_header);
 }
 
 auto FileHeader::numProgramHeaders() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phNumber; },
-                               [](const Elf32_Header_t &x32) { return x32.phNumber; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.phNumber; }}, elf_header);
 }
 
 auto FileHeader::sectionHeaderEntrySize() const noexcept -> std::size_t {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shEntrySize; },
-                               [](const Elf32_Header_t &x32) { return x32.shEntrySize; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.shEntrySize; }}, elf_header);
 }
 
 auto FileHeader::numSectionHeaders() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shNumber; },
-                               [](const Elf32_Header_t &x32) { return x32.shNumber; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.shNumber; }}, elf_header);
 }
 
 auto FileHeader::sectionHeaderStringTableIndex() const noexcept -> int {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shStringIndex; },
-                               [](const Elf32_Header_t &x32) { return x32.shStringIndex; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.shStringIndex; }}, elf_header);
 }
 
 auto FileHeader::hasProgramHeaders() const noexcept -> bool {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.phOffset == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.phOffset == 0; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.phOffset == 0; }}, elf_header);
 }
 
 auto FileHeader::hasSectionHeaders() const noexcept -> bool {
   return std::visit(overloaded{[](const Elf64_Header_t &x64) { return x64.shOffset == 0; },
-                               [](const Elf32_Header_t &x32) { return x32.shOffset == 0; }},
-                    elf_header);
+                               [](const Elf32_Header_t &x32) { return x32.shOffset == 0; }}, elf_header);
 }
 
-constexpr std::array<Elf_byte, 4> identification_bytes{0x7f, 'E', 'L', 'F'};
 
 auto FileHeader::isELF() const noexcept -> bool {
+  const std::array<Elf_byte, 4> identification_bytes{0x7f, 'E', 'L', 'F'};
+
   fin.seekg(0);
 
   std::array<Elf_byte, 4> buf{};
@@ -310,8 +300,10 @@ auto FileHeader::isELF() const noexcept -> bool {
 
 auto FileHeader::is64bit() const noexcept -> bool {
   fin.seekg(4);
+
   Elf_byte temp;
   fin.read(reinterpret_cast<char *>(&temp), sizeof(Elf_byte));
+
   return temp == 2;
 }
 
@@ -319,8 +311,7 @@ std::string shNameStr;
 auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view {
   const auto offset =
       std::visit(overloaded{[shName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + shName; },
-                            [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }},
-                 section_headers[sectionHeaderStringTableIndex()]);
+                            [shName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + shName; }}, section_headers[sectionHeaderStringTableIndex()]);
 
   fin.seekg(offset);
 
@@ -332,13 +323,12 @@ auto FileHeader::getSectionHeaderName(const std::size_t shName) const noexcept -
 
 std::string symNameStr;
 auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::string_view {
-
   std::size_t sectionTableIndex = 0;
+
   const auto sections = sectionHeaders();
   for(std::size_t i = 0; i < sections.size(); ++i) {
       const auto name = std::visit(overloaded{[](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.name; },
-                                              [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.name; }}, 
-                                     sections[i]);
+                                              [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.name; }}, sections[i]);
 
       if(getSectionHeaderName(name) == ".strtab")  {
         sectionTableIndex = i; 
@@ -348,10 +338,10 @@ auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::strin
 
   const auto offset =
       std::visit(overloaded{[symName](const Elf32_Section_Header_t &x86) -> std::size_t { return x86.offset + symName; },
-                            [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }},
-                 section_headers[sectionTableIndex]);
+                            [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }}, section_headers[sectionTableIndex]);
 
   fin.seekg(offset);
+
   std::getline(fin, symNameStr, '\0');
 
   return symNameStr.c_str();
@@ -391,7 +381,6 @@ auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view
   }
 }
 
-// clang-format off
 std::string phFlagStr;
 auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view {
   phFlagStr.clear();
@@ -406,26 +395,25 @@ auto getProgramHeaderFlag(const std::size_t phFlag) noexcept -> std::string_view
 }
 
 auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view {
-  // clang-format off
   switch(shType) {
-  case 0:  return "NULL";           // Section header table entry unused
-  case 1:  return "PROGBITS";       // Program data
-  case 2:  return "SYMTAB";         // Symbol table
-  case 3:  return "STRTAB";         // String table
-  case 4:  return "RELA";           // Relocation entries with addends
-  case 5:  return "HASH";           // Symbol hash table
-  case 6:  return "DYNAMIC";        // Dynamic linking information
-  case 7:  return "NOTE";           // Notes
-  case 8:  return "NOBITS";         // Program space with no data (bss)
-  case 9:  return "REL";            // Relocation entries, no addends
-  case 10: return "SHLIB";          // Reserved
-  case 11: return "DYNSYM";         // Dynamic linker symbol table
-  case 14: return "INIT_ARRAY";     // Array of constructors
-  case 15: return "FINI_ARRAY";     // Array of destructors
-  case 16: return "PREINIT_ARRAY";  // Array of pre-constructors
-  case 17: return "GROUP";          // Section group
-  case 18: return "SYMTAB_SHNDX";   // Extended section indeces
-  case 19: return "NUM";            // Number of defined types.
+  case 0:  return "NULL";          // Section header table entry unused
+  case 1:  return "PROGBITS";      // Program data
+  case 2:  return "SYMTAB";        // Symbol table
+  case 3:  return "STRTAB";        // String table
+  case 4:  return "RELA";          // Relocation entries with addends
+  case 5:  return "HASH";          // Symbol hash table
+  case 6:  return "DYNAMIC";       // Dynamic linking information
+  case 7:  return "NOTE";          // Notes
+  case 8:  return "NOBITS";        // Program space with no data (bss)
+  case 9:  return "REL";           // Relocation entries, no addends
+  case 10: return "SHLIB";         // Reserved
+  case 11: return "DYNSYM";        // Dynamic linker symbol table
+  case 14: return "INIT_ARRAY";    // Array of constructors
+  case 15: return "FINI_ARRAY";    // Array of destructors
+  case 16: return "PREINIT_ARRAY"; // Array of pre-constructors
+  case 17: return "GROUP";         // Section group
+  case 18: return "SYMTAB_SHNDX";  // Extended section indeces
+  case 19: return "NUM";           // Number of defined types.
   }
                
   if(shType >= 0x60000000 && shType <= 0x6fffffff) { // [start-end] OS-specific
@@ -438,21 +426,21 @@ auto getSectionHeaderType(const std::size_t shType) noexcept -> std::string_view
 
     if(shType >= 0x6ffffffa && shType <= 0x6fffffff) { // [start-end] Sun-specific
       switch(shType) {
-      case 0x6ffffffa: return "SUNW_move";      //
-      case 0x6ffffffb: return "SUNW_COMDAT";    //
-      case 0x6ffffffc: return "SUNW_syminfo";   //
-      case 0x6ffffffd: return "GNU_verdef";     // Version definition section.
-      case 0x6ffffffe: return "GNU_verneed";    // Version needs section.
-      case 0x6fffffff: return "GNU_versym";     // Version symbol table.
+      case 0x6ffffffa: return "SUNW_move";    //
+      case 0x6ffffffb: return "SUNW_COMDAT";  //
+      case 0x6ffffffc: return "SUNW_syminfo"; //
+      case 0x6ffffffd: return "GNU_verdef";   // Version definition section.
+      case 0x6ffffffe: return "GNU_verneed";  // Version needs section.
+      case 0x6fffffff: return "GNU_versym";   // Version symbol table.
       }
     }
   }
 
-  if(shType >= 0x70000000 && shType <= 0x7fffffff) {  // [start-end] processor specific
+  if(shType >= 0x70000000 && shType <= 0x7fffffff) { // [start-end] processor specific
     return "processor specific";
   }
 
-  if(shType >= 0x80000000 && shType <= 0x8fffffff) {  // [start-end] processor specific
+  if(shType >= 0x80000000 && shType <= 0x8fffffff) { // [start-end] processor specific
     return "application specific";
   }
 }
@@ -480,14 +468,14 @@ auto getSectionHeaderFlag(const std::size_t shFlag) noexcept -> std::string_view
 
 auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view {
   switch(symInfo & 0b1111) {
-  case 0: return "NOTYPE";     // symbol type is unspecified
-  case 1: return "OBJECT";     // symbol is a data object
-  case 2: return "FUNC";       // symbol is a code object
-  case 3: return "SECTION";    // symbol associated with a section
-  case 4: return "FILE";       // symbol's name is file name
-  case 5: return "COMMON";     // symbol is a common data object
-  case 6: return "TLS";        // symbol is thread-local data object
-  case 7: return "NUM";        // number of defined types
+  case 0: return "NOTYPE";  // symbol type is unspecified
+  case 1: return "OBJECT";  // symbol is a data object
+  case 2: return "FUNC";    // symbol is a code object
+  case 3: return "SECTION"; // symbol associated with a section
+  case 4: return "FILE";    // symbol's name is file name
+  case 5: return "COMMON";  // symbol is a common data object
+  case 6: return "TLS";     // symbol is thread-local data object
+  case 7: return "NUM";     // number of defined types
   }
 
   if(symInfo >= 10 && symInfo <= 12) { // [start, end] OS-specific
@@ -503,10 +491,10 @@ auto getSymbolType(const Elf_byte symInfo) noexcept -> std::string_view {
 
 auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view {
   switch(symInfo >> 4) {
-  case 0: return "LOCAL";   // local symbol
-  case 1: return "GLOBAL";  // global symbol
-  case 2: return "WEAK";    // weak symbol
-  case 3: return "NUM";     // number of defined types.
+  case 0: return "LOCAL";  // local symbol
+  case 1: return "GLOBAL"; // global symbol
+  case 2: return "WEAK";   // weak symbol
+  case 3: return "NUM";    // number of defined types.
   }
 
   if(symInfo >= 10 && symInfo <= 12) { // [start, end] OS-specific
