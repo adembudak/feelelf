@@ -162,15 +162,15 @@ auto FileHeader::machine() const noexcept -> std::string_view {
   }
 }
 
-auto FileHeader::version() const noexcept -> int {
+auto FileHeader::version() const noexcept -> std::size_t {
   return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.version; },
                                [](const Elf64_Header_t &x64) { return x64.version; }},
                     elf_header);
 }
 
-auto FileHeader::entryPoint() const noexcept -> int {
-  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> int { return x32.entryPoint; },
-                               [](const Elf64_Header_t &x64) -> int { return x64.entryPoint; }},
+auto FileHeader::entryPoint() const noexcept -> std::size_t {
+  return std::visit(overloaded{[](const Elf32_Header_t &x32) -> std::size_t { return x32.entryPoint; },
+                               [](const Elf64_Header_t &x64) -> std::size_t { return x64.entryPoint; }},
                     elf_header);
 }
 

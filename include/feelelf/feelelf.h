@@ -169,8 +169,8 @@ public:
 
   [[nodiscard]] auto type()                const noexcept -> std::string_view;
   [[nodiscard]] auto machine()             const noexcept -> std::string_view;
-  [[nodiscard]] auto version()             const noexcept -> int;
-  [[nodiscard]] auto entryPoint()          const noexcept -> int;
+  [[nodiscard]] auto version()             const noexcept -> std::size_t;
+  [[nodiscard]] auto entryPoint()          const noexcept -> std::size_t;
   [[nodiscard]] auto programHeaderOffset() const noexcept -> std::size_t;
   [[nodiscard]] auto sectionHeaderOffset() const noexcept -> std::size_t;
 
