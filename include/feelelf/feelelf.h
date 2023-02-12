@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <span>
 #include <string_view>
 #include <variant>
@@ -153,7 +154,7 @@ using Symbol_t = std::variant<Elf32_Symbol_t, Elf64_Symbol_t>;
 class FileHeader {
   Elf_Header_t elf_header;
   std::vector<Program_Header_t> program_headers;
-  std::vector<Section_Header_t> section_headers;
+  std::map<std::string, Section_Header_t> section_headers;
 
 public:
   [[nodiscard]] auto open(const char *file) noexcept -> bool;
@@ -174,9 +175,9 @@ public:
   [[nodiscard]] auto programHeaderOffset() const noexcept -> std::size_t;
   [[nodiscard]] auto sectionHeaderOffset() const noexcept -> std::size_t;
 
-  [[nodiscard]] auto programHeaders() noexcept -> const decltype(program_headers) &;
-  [[nodiscard]] auto sectionHeaders() noexcept -> decltype(section_headers) const &;
-  [[nodiscard]] auto symbols()        noexcept -> std::vector<Symbol_t> const;
+  [[nodiscard]] auto programHeaders() const noexcept -> const decltype(program_headers) &;
+  [[nodiscard]] auto sectionHeaders() const noexcept -> const decltype(section_headers) &;
+  [[nodiscard]] auto symbols()        const noexcept -> const std::vector<Symbol_t>;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
@@ -187,7 +188,6 @@ public:
   [[nodiscard]] auto sectionHeaderEntrySize() const noexcept -> std::size_t;
   [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
   [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
-  [[nodiscard]] auto getSectionHeaderName(const std::size_t shName) const noexcept -> std::string_view;
   [[nodiscard]] auto getSymbolName(const std::size_t symName) noexcept -> std::string_view;
 
 private:
