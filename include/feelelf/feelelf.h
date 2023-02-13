@@ -151,6 +151,23 @@ struct Elf64_Symbol_t {
 };
 using Symbol_t = std::variant<Elf32_Symbol_t, Elf64_Symbol_t>;
 
+struct Elf32_Dynamic_t {
+  Elf32_Sword d_tag; // Dynamic entry type
+  union {
+    Elf32_Word d_val; // Integer value
+    Elf32_Addr d_ptr; // Address value
+  } d_un;
+};
+
+struct Elf64_Dynamic_t {
+  Elf64_SXword d_tag;
+  union {
+    Elf64_Xword d_val;
+    Elf64_Addr d_ptr;
+  } d_un;
+};
+using Dynamic_t = std::variant<Elf32_Dynamic_t, Elf64_Dynamic_t>;
+
 class FileHeader {
   Elf_Header_t elf_header;
   std::vector<Program_Header_t> program_headers;
