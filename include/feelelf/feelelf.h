@@ -195,6 +195,7 @@ public:
   [[nodiscard]] auto programHeaders() const noexcept -> const decltype(program_headers) &;
   [[nodiscard]] auto sectionHeaders() const noexcept -> const decltype(section_headers) &;
   [[nodiscard]] auto symbols()        const noexcept -> const std::vector<Symbol_t>;
+  [[nodiscard]] auto dynamicSymbols() const noexcept -> const std::vector<Symbol_t>;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
@@ -205,7 +206,8 @@ public:
   [[nodiscard]] auto sectionHeaderEntrySize() const noexcept -> std::size_t;
   [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
   [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
-  [[nodiscard]] auto getSymbolName(const std::size_t symName) noexcept -> std::string_view;
+  [[nodiscard]] auto getSymbolName(const std::size_t name) noexcept -> std::string;
+  [[nodiscard]] auto getDynamicSymbolName(const std::size_t name) noexcept -> std::string;
 
 private:
   [[nodiscard]] auto isELF()   const noexcept -> bool;

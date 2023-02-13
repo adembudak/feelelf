@@ -172,19 +172,19 @@ int main(int argc, const char *argv[]) {
     }
 
     if(show_symbols) {
-      const auto symbols = header.symbols();
+      show_dynamic_symbols = true;
 
-      if(!std::empty(symbols)) {
-        if(std::holds_alternative<feelelf::Elf32_Symbol_t>(symbols[0])) {
+      if(const auto &symbols = header.symbols(); !std::empty(symbols)) {
+        fmt::print("\nSymbol table '{}' contains {} entries:\n", ".symtab", std::size(symbols));
+        if(header.fileClass() == "ELF32") {
 
           fmt::print("{num:>8} {value:^9} {size:>4} {type:^7} {bind:<5} {vis:^10} {index:>5} {name}\n",
                      "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
                      "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
 
           for(int i = 0; const auto &sym : symbols) {
-            const auto x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
-            fmt::print("{num:>7}: {value:<08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} "
-                       "{name} \n",
+            const auto &x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
+            fmt::print("{num:>7}: {value:>08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
                        "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
                        "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
                        "visibility"_a = feelelf::getSymbolVisibility(x86.other), "index"_a = x86.shndx,
@@ -198,7 +198,7 @@ int main(int argc, const char *argv[]) {
                      "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
 
           for(int i = 0; const auto &sym : symbols) {
-            const auto x64 = std::get<feelelf::Elf64_Symbol_t>(sym);
+            const auto &x64 = std::get<feelelf::Elf64_Symbol_t>(sym);
             fmt::print("{num:>7}: {value:>016x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
                        "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size,
                        "type"_a = feelelf::getSymbolType(x64.info), "binding"_a = feelelf::getSymbolBind(x64.info),
@@ -210,7 +210,35 @@ int main(int argc, const char *argv[]) {
     }
 
     if(show_dynamic_symbols) {
-      //
+      if(const auto &dynSymbols = header.dynamicSymbols(); !std::empty(dynSymbols)) {
+        fmt::print("\nSymbol table '{}' contains {} entries:\n", ".dynsym", std::size(dynSymbols));
+
+        if(header.fileClass() == "ELF32") {
+          for(int i = 0; const auto &sym : dynSymbols) {
+            const auto &x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
+            fmt::print("{num:>7}: {value:>08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name:}\n",
+                       "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
+                       "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
+                       "visibility"_a = feelelf::getSymbolVisibility(x86.other), "index"_a = x86.shndx,
+                       "name"_a = header.getDynamicSymbolName(x86.name));
+          }
+        }
+
+        else {
+          fmt::print("{num:>8} {value:^17} {size:>4} {type:^6} {bind:^6} {vis:<8} {index:>5} {name}\n",
+                     "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
+                     "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
+
+          for(int i = 0; const auto &sym : dynSymbols) {
+            const auto &x64 = std::get<feelelf::Elf64_Symbol_t>(sym);
+            fmt::print("{num:>7}: {value:>016x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
+                       "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size,
+                       "type"_a = feelelf::getSymbolType(x64.info), "binding"_a = feelelf::getSymbolBind(x64.info),
+                       "visibility"_a = feelelf::getSymbolVisibility(x64.other), "index"_a = x64.shndx,
+                       "name"_a = header.getDynamicSymbolName(x64.name));
+          }
+        }
+      }
     }
   }
 }

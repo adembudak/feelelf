@@ -265,8 +265,8 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
          overloaded{
            [&](const Elf32_Section_Header_t &x32) {
                  fin.seekg(x32.offset);
-                 const int size = x32.size / x32.entsize;
-
+                 const auto size = x32.size / x32.entsize;
+  
                  Elf32_Symbol_t symbol{};
                  for(int i = 0; i < size; ++i) {
                    fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
@@ -275,8 +275,8 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
            }, 
            [&](const Elf64_Section_Header_t &x64) {
                  fin.seekg(x64.offset);
-                 const int size = x64.size / x64.entsize;
-
+                 const auto size = x64.size / x64.entsize;
+  
                  Elf64_Symbol_t symbol{};
                  for(int i = 0; i < size; ++i) {
                    fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
@@ -286,6 +286,39 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
          }, section_headers.find(".symtab")->second);
 
   return symbols;
+}
+
+
+auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> {
+  std::vector<Symbol_t> dynSymbols;
+
+  if(section_headers.contains(".dynsym")) {
+    std::visit(
+           overloaded{
+             [&](const Elf32_Section_Header_t &x32) {
+                   fin.seekg(x32.offset);
+                   const auto size = x32.size / x32.entsize;
+    
+                   Elf32_Symbol_t symbol{};
+                   for(int i = 0; i < size; ++i) {
+                     fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+                     dynSymbols.push_back(symbol);
+                   }
+             }, 
+             [&](const Elf64_Section_Header_t &x64) {
+                   fin.seekg(x64.offset);
+                   const auto size = x64.size / x64.entsize;
+    
+                   Elf64_Symbol_t symbol{};
+                   for(int i = 0; i < size; ++i) {
+                     fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+                     dynSymbols.push_back(symbol);
+                   }
+             }
+           }, section_headers.find(".dynsym")->second);
+  }
+
+  return dynSymbols;
 }
 
 auto FileHeader::flags() const noexcept -> int {
@@ -343,17 +376,30 @@ auto FileHeader::is64bit() const noexcept -> bool {
   return temp == 2;
 }
 
-std::string symNameStr;
-auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::string_view {
+auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::string {
   const auto offset =
-      std::visit(overloaded{[symName](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset + symName; },
-                            [symName](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset + symName; }}, section_headers[".strtab"]);
+      std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
+                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers[".strtab"]);
 
-  fin.seekg(offset);
+  fin.seekg(offset + symName);
 
+  std::string symNameStr;
   std::getline(fin, symNameStr, '\0');
 
-  return symNameStr.c_str();
+  return symNameStr;
+}
+
+auto FileHeader::getDynamicSymbolName(const std::size_t name) noexcept -> std::string {
+  const auto offset =
+      std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
+                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers[".dynstr"]);
+
+  fin.seekg(offset + name);
+
+  std::string dynSymNameStr;
+  std::getline(fin, dynSymNameStr, '\0');
+
+  return dynSymNameStr;
 }
 
 auto getProgramHeaderType(const std::size_t phType) noexcept -> std::string_view {
