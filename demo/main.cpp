@@ -102,7 +102,7 @@ int main(int argc, const char *argv[]) {
       fmt::print("Program Headers:\n");
       if(!header.programHeaders().empty()) {
 
-        if(std::holds_alternative<feelelf::Elf32_Program_Header_t>(header.programHeaders()[0])) {
+        if(header.fileClass() == "ELF32") {
           fmt::print("{:^14} {:^8} {:^10} {:^10} {:^7} {:^7} {:^6} {:<8}\n", "Type", "Offset", "VirtAddr", "PhysAddr",
                      "FileSiz", "MemSiz", "Flags", "Align");
 
@@ -135,7 +135,7 @@ int main(int argc, const char *argv[]) {
 
       fmt::print("Section Headers:\n");
 
-      if(std::holds_alternative<feelelf::Elf32_Section_Header_t>(header.sectionHeaders().find("")->second)) {
+      if(header.fileClass() == "ELF32") {
         fmt::print("  {} {:<18} {:<15} {:<8} {:<6} {:<6} {:<9} {:<5} {:<4} {:<4} {}\n", "[Nr]", "Name", "Type",
                    "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
