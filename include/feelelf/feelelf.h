@@ -168,6 +168,18 @@ struct Elf64_Dynamic_t {
 };
 using Dynamic_t = std::variant<Elf32_Dynamic_t, Elf64_Dynamic_t>;
 
+struct Elf32_Note_header_t {
+  Elf32_Word name_sz; // length of the note's name
+  Elf32_Word desc_sz; // length of the note's descriptor
+  Elf32_Word type;    // type of the note
+};
+
+struct Elf64_Note_header_t {
+  Elf64_Word name_sz;
+  Elf64_Word desc_sz;
+  Elf64_Word type;
+};
+
 class FileHeader {
   Elf_Header_t elf_header;
   std::vector<Program_Header_t> program_headers;
