@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -59,8 +60,6 @@ auto FileHeader::decode() noexcept -> void {
                 fin.seekg(position_before_reading_section_name); // pop read pointer back
               }
             }
-
-            // clang-format off
 
             if(auto phOffset = elf_header.phOffset; phOffset != 0) { // no program header if the offset is 0
               program_headers.resize(elf_header.phNumber, Elf32_Program_Header_t{});
@@ -321,6 +320,93 @@ auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> 
   return dynSymbols;
 }
 
+auto FileHeader::notes() const noexcept -> const std::map<std::string, std::tuple<std::string, std::size_t, std::string>> {
+  std::map<std::string, std::tuple<std::string, std::size_t, std::string>> things;
+
+  for(const auto &[name, section] : section_headers) {
+    if(name.starts_with(".note")) {
+      auto offset = 
+        std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
+                              [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section);
+      fin.seekg(offset);
+
+      Elf32_Note_header_t note;
+      fin.read(reinterpret_cast<char*>(&note), sizeof(decltype(note)));
+
+      std::string noteName;
+      std::getline(fin, noteName, '\0');
+
+      std::vector<Elf32_Word> desc_words(note.desc_sz / sizeof(Elf32_Word), Elf32_Word{});
+      for(auto &word : desc_words)
+        fin.read(reinterpret_cast<char *>(&word), sizeof(Elf32_Word));
+
+      // clang-format on
+      std::ostringstream sout;
+      if(note.type == 1) { // description words:
+        // word 0: OS descriptor
+        // word 1: major version of the ABI
+        // word 2: minor version of the ABI
+        // word 3: subminor version of the ABI
+
+        sout << "NT_GNU_ABI_TAG\n";
+        sout << "OS: ";
+
+        switch(desc_words[0]) {
+        case 0: sout << "Linux, "; break;
+        case 1: sout << "GNU, "; break;
+        case 2: sout << "Solaris2, "; break;
+        case 3: sout << "FreeBSD, "; break;
+        }
+
+        sout << "ABI: " << desc_words[1] << '.' << desc_words[2] << '.' << desc_words[3];
+        sout << '\n';
+      }
+
+      else if(note.type == 2) {
+        sout << "NT_GNU_HWCAP"; // Synthetic hwcap information.
+        // word 0: number of entries
+        // word 1: bitmask of enabled entries
+        // Then follow variable-length entries, one byte followed by a '\0'-terminated hwcap name string.
+        // The byte gives the bit number to test if enabled, (1U << bit) & bitmask.
+        //
+        std::vector<Elf_byte> entries(desc_words[0], Elf_byte{});
+        const auto bitmask = desc_words[1];
+        for(int i = 0; const auto entry : entries) {
+          auto _ = (1U << i) & bitmask;
+        }
+      }
+
+      else if(note.type == 3) {
+        sout << "NT_GNU_BUILD_ID\n";
+        sout << "Build ID: ";
+        for(auto word : desc_words)
+          sout << std::hex << word;
+        sout << '\n';
+      }
+
+      else if(note.type == 4) {
+        sout << "NT_GNU_GOLD_VERSION\n";
+      }
+
+      else if(note.type == 5) {
+        sout << "NT_GNU_PROPERTY_TYPE_0\n";
+      }
+
+      else {
+        sout << "Unknown note type: " << '(' << "0x" << std::hex << note.type << ')' << '\n';
+        for(auto word : desc_words)
+          sout << std::hex << word << ' ';
+        sout << '\n';
+      }
+
+      things[name] = std::make_tuple(noteName, note.desc_sz, sout.str());
+    }
+  }
+
+  return things;
+}
+
+// clang-format off
 auto FileHeader::flags() const noexcept -> int {
   return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.flags; },
                                [](const Elf64_Header_t &x64) { return x64.flags; }}, elf_header);

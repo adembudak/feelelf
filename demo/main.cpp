@@ -20,6 +20,7 @@ int main(int argc, const char *argv[]) {
   bool show_symbols = false;
   bool show_dynamic_symbols = false;
   bool show_headers = false;
+  bool show_notes = false;
 
   CLI::App app{{}, "readelf"};
   try {
@@ -37,6 +38,7 @@ int main(int argc, const char *argv[]) {
     app.add_flag("-s,--syms", show_symbols, "Display the symbol table");
     app.add_flag("--symbols", show_symbols, "An alias for --syms");
     app.add_flag("--dyn-syms", show_dynamic_symbols, "Display the dynamic symbol table");
+    app.add_flag("-n,--notes", show_notes, "Display the core notes (if present)");
 
     app.add_flag("-e,--headers", show_headers, "Equivalent to: -h -l -s");
 
@@ -240,5 +242,17 @@ int main(int argc, const char *argv[]) {
         }
       }
     }
+
+    if(show_notes) {
+      for(const auto &[noteSectionName, noteTuple] : header.notes()) {
+        const auto &[noteName, noteDescSize, noteType] = noteTuple;
+        fmt::print("Displaying notes found in: {}\n", noteSectionName);
+        fmt::print("  Owner                Data size 	Description\n");
+        fmt::print("  {}                  {:#x}       {}\n", noteName, noteDescSize, noteType);
+        // fmt::print("    {}\n", "OS: Linux, ABI: 3.2.0");
+      }
+    }
+
+    ///
   }
 }

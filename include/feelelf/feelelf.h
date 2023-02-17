@@ -4,6 +4,7 @@
 #include <map>
 #include <span>
 #include <string_view>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -208,6 +209,7 @@ public:
   [[nodiscard]] auto sectionHeaders() const noexcept -> const decltype(section_headers) &;
   [[nodiscard]] auto symbols()        const noexcept -> const std::vector<Symbol_t>;
   [[nodiscard]] auto dynamicSymbols() const noexcept -> const std::vector<Symbol_t>;
+  [[nodiscard]] auto notes()          const noexcept -> const std::map<std::string, std::tuple<std::string, std::size_t, std::string>>;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
