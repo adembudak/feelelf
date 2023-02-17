@@ -181,6 +181,28 @@ struct Elf64_Note_header_t {
   Elf64_Word type;
 };
 
+struct Elf32_Rel {
+  Elf32_Addr offset;
+  Elf32_Word info;
+};
+
+struct Elf64_Rel {
+  Elf64_Addr offset;
+  Elf64_Xword info;
+};
+
+struct Elf32_Rela {
+  Elf32_Addr offset;
+  Elf32_Word info;
+  Elf32_Sword addend;
+};
+
+struct Elf64_Rela {
+  Elf64_Addr offset;
+  Elf64_Xword info;
+  Elf64_SXword addend;
+};
+
 class FileHeader {
   Elf_Header_t elf_header;
   std::vector<Program_Header_t> program_headers;
@@ -210,6 +232,7 @@ public:
   [[nodiscard]] auto symbols()        const noexcept -> const std::vector<Symbol_t>;
   [[nodiscard]] auto dynamicSymbols() const noexcept -> const std::vector<Symbol_t>;
   [[nodiscard]] auto notes()          const noexcept -> const std::map<std::string, std::tuple<std::string, std::size_t, std::string>>;
+  [[nodiscard]] auto relocations()    const noexcept -> const std::pair<int, std::string>;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;
