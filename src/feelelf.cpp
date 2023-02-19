@@ -25,6 +25,8 @@ template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 std::ifstream fin;
 
 auto FileHeader::open(const char *file) noexcept -> bool {
+  if(fin.is_open()) fin.close();
+
   fin.open(file, std::ios::binary);
 
   if(!isELF()) return false;
