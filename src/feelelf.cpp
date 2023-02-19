@@ -12,9 +12,9 @@
 namespace feelelf {
 
 namespace {
-std::string_view i386_relocation_symbols(unsigned int info);
-std::string_view amd64_relocation_symbols(unsigned int info);
-std::string_view aarch64_relocation_symbols(unsigned int info);
+std::string_view i386_relocation_symbols(unsigned int type);
+std::string_view amd64_relocation_symbols(unsigned int type);
+std::string_view aarch64_relocation_symbols(unsigned int type);
 }
 
 // clang-format off
@@ -667,8 +667,8 @@ auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
 }
 
 namespace {
-std::string_view amd64_relocation_symbols(unsigned int info) {
-  switch(info & 0xff) {
+std::string_view amd64_relocation_symbols(unsigned int type) {
+  switch(type) {
   case 0: return "R_X86_64_NONE";
   case 1: return "R_X86_64_64";
   case 2: return "R_X86_64_PC32";
@@ -717,8 +717,8 @@ std::string_view amd64_relocation_symbols(unsigned int info) {
   }
 }
 
-std::string_view i386_relocation_symbols(unsigned int info) {
-  switch(info & 0xff) {
+std::string_view i386_relocation_symbols(unsigned int type) {
+  switch(type) {
   case 0: return "R_386_NONE";
   case 1: return "R_386_32";
   case 2: return "R_386_PC32";
@@ -766,8 +766,8 @@ std::string_view i386_relocation_symbols(unsigned int info) {
   }
 }
 
-std::string_view aarch64_relocation_symbols(unsigned int info) {
-  switch(info & 0xff) {
+std::string_view aarch64_relocation_symbols(unsigned int type) {
+  switch(type) {
   case 0: return "R_AARCH64_NONE";
   case 1: return "R_AARCH64_P32_ABS32";
   case 180: return "R_AARCH64_P32_COPY";
