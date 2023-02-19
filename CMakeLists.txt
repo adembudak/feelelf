@@ -4,7 +4,9 @@ project(feelelf HOMEPAGE_URL https://github.com/adembudak/feelelf LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebInfo;MinSizeRel")
+if(DEFINED CMAKE_BUILD_TYPE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebInfo;MinSizeRel")
+endif()
 
 option(BUILD_DEMO "A clone of readelf" YES)
 
