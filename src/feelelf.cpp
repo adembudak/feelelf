@@ -11,6 +11,12 @@
 
 namespace feelelf {
 
+namespace {
+std::string_view i386_relocation_symbols(unsigned int info);
+std::string_view amd64_relocation_symbols(unsigned int info);
+std::string_view aarch64_relocation_symbols(unsigned int info);
+}
+
 // clang-format off
 template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -656,6 +662,246 @@ auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
   case 2: return "HIDDEN";    // sym unavailable in other modules
   case 3: return "PROTECTED"; // not preemptible, not exported
   }
+}
+
+namespace {
+std::string_view amd64_relocation_symbols(unsigned int info) {
+  switch(info & 0xff) {
+  case 0: return "R_X86_64_NONE";
+  case 1: return "R_X86_64_64";
+  case 2: return "R_X86_64_PC32";
+  case 3: return "R_X86_64_GOT32";
+  case 4: return "R_X86_64_PLT32";
+  case 5: return "R_X86_64_COPY";
+  case 6: return "R_X86_64_GLOB_DAT";
+  case 7: return "R_X86_64_JUMP_SLOT";
+  case 8: return "R_X86_64_RELATIVE";
+  case 9: return "R_X86_64_GOTPCREL";
+  case 10: return "R_X86_64_32";
+  case 11: return "R_X86_64_32S";
+  case 12: return "R_X86_64_16";
+  case 13: return "R_X86_64_PC16";
+  case 14: return "R_X86_64_8";
+  case 15: return "R_X86_64_PC8";
+  case 16: return "R_X86_64_DTPMOD64";
+  case 17: return "R_X86_64_DTPOFF64";
+  case 18: return "R_X86_64_TPOFF64";
+  case 19: return "R_X86_64_TLSGD";
+  case 20: return "R_X86_64_TLSLD";
+  case 21: return "R_X86_64_DTPOFF32";
+  case 22: return "R_X86_64_GOTTPOFF";
+  case 23: return "R_X86_64_TPOFF32";
+  case 24: return "R_X86_64_PC64";
+  case 25: return "R_X86_64_GOTOFF64";
+  case 26: return "R_X86_64_GOTPC32";
+  case 27: return "R_X86_64_GOT64";
+  case 28: return "R_X86_64_GOTPCREL64";
+  case 29: return "R_X86_64_GOTPC64";
+  case 30: return "R_X86_64_GOTPLT64";
+  case 31: return "R_X86_64_PLTOFF64";
+  case 32: return "R_X86_64_SIZE32";
+  case 33: return "R_X86_64_SIZE64";
+  case 34: return "R_X86_64_GOTPC32_TLSDESC";
+  case 35: return "R_X86_64_TLSDESC_CALL";
+  case 36: return "R_X86_64_TLSDESC";
+  case 37: return "R_X86_64_IRELATIVE";
+  case 38: return "R_X86_64_RELATIVE64";
+  case 39: return "Reserved R_X86_64_PC32_BND";
+  case 40: return "Reserved R_X86_64_PLT32_BND";
+  case 41: return "R_X86_64_GOTPCRELX";
+  case 42: return "R_X86_64_REX_GOTPCRELX";
+  case 43: return "R_X86_64_NUM";
+  default: return "Unknown";
+  }
+}
+
+std::string_view i386_relocation_symbols(unsigned int info) {
+  switch(info & 0xff) {
+  case 0: return "R_386_NONE";
+  case 1: return "R_386_32";
+  case 2: return "R_386_PC32";
+  case 3: return "R_386_GOT32";
+  case 4: return "R_386_PLT32";
+  case 5: return "R_386_COPY";
+  case 6: return "R_386_GLOB_DAT";
+  case 7: return "R_386_JMP_SLOT";
+  case 8: return "R_386_RELATIVE";
+  case 9: return "R_386_GOTOFF";
+  case 10: return "R_386_GOTPC";
+  case 11: return "R_386_32PLT";
+  case 14: return "R_386_TLS_TPOFF";
+  case 15: return "R_386_TLS_IE";
+  case 16: return "R_386_TLS_GOTIE";
+  case 17: return "R_386_TLS_LE";
+  case 18: return "R_386_TLS_GD";
+  case 19: return "R_386_TLS_LDM";
+  case 20: return "R_386_16";
+  case 21: return "R_386_PC16";
+  case 22: return "R_386_8";
+  case 23: return "R_386_PC8";
+  case 24: return "R_386_TLS_GD_32";
+  case 25: return "R_386_TLS_GD_PUSH";
+  case 26: return "R_386_TLS_GD_CALL";
+  case 27: return "R_386_TLS_GD_POP";
+  case 28: return "R_386_TLS_LDM_32";
+  case 29: return "R_386_TLS_LDM_PUSH";
+  case 30: return "R_386_TLS_LDM_CALL";
+  case 31: return "R_386_TLS_LDM_POP";
+  case 32: return "R_386_TLS_LDO_32";
+  case 33: return "R_386_TLS_IE_32";
+  case 34: return "R_386_TLS_LE_32";
+  case 35: return "R_386_TLS_DTPMOD32";
+  case 36: return "R_386_TLS_DTPOFF32";
+  case 37: return "R_386_TLS_TPOFF32";
+  case 38: return "R_386_SIZE32";
+  case 39: return "R_386_TLS_GOTDESC";
+  case 40: return "R_386_TLS_DESC_CALL";
+  case 41: return "R_386_TLS_DESC";
+  case 42: return "R_386_IRELATIVE";
+  case 43: return "R_386_GOT32X";
+  case 44: return "R_386_NUM";
+  default: return "Unknown";
+  }
+}
+
+std::string_view aarch64_relocation_symbols(unsigned int info) {
+  switch(info & 0xff) {
+  case 0: return "R_AARCH64_NONE";
+  case 1: return "R_AARCH64_P32_ABS32";
+  case 180: return "R_AARCH64_P32_COPY";
+  case 181: return "R_AARCH64_P32_GLOB_DAT";
+  case 182: return "R_AARCH64_P32_JUMP_SLOT";
+  case 183: return "R_AARCH64_P32_RELATIVE";
+  case 184: return "R_AARCH64_P32_TLS_DTPMOD";
+  case 185: return "R_AARCH64_P32_TLS_DTPREL";
+  case 186: return "R_AARCH64_P32_TLS_TPREL";
+  case 187: return "R_AARCH64_P32_TLSDESC";
+  case 188: return "R_AARCH64_P32_IRELATIVE";
+  case 257: return "R_AARCH64_ABS64";
+  case 258: return "R_AARCH64_ABS32";
+  case 259: return "R_AARCH64_ABS16";
+  case 260: return "R_AARCH64_PREL64";
+  case 261: return "R_AARCH64_PREL32";
+  case 262: return "R_AARCH64_PREL16";
+  case 263: return "R_AARCH64_MOVW_UABS_G0";
+  case 264: return "R_AARCH64_MOVW_UABS_G0_NC";
+  case 265: return "R_AARCH64_MOVW_UABS_G1";
+  case 266: return "R_AARCH64_MOVW_UABS_G1_NC";
+  case 267: return "R_AARCH64_MOVW_UABS_G2";
+  case 268: return "R_AARCH64_MOVW_UABS_G2_NC";
+  case 269: return "R_AARCH64_MOVW_UABS_G3";
+  case 270: return "R_AARCH64_MOVW_SABS_G0";
+  case 271: return "R_AARCH64_MOVW_SABS_G1";
+  case 272: return "R_AARCH64_MOVW_SABS_G2";
+  case 273: return "R_AARCH64_LD_PREL_LO19";
+  case 274: return "R_AARCH64_ADR_PREL_LO21";
+  case 275: return "R_AARCH64_ADR_PREL_PG_HI21";
+  case 276: return "R_AARCH64_ADR_PREL_PG_HI21_NC";
+  case 277: return "R_AARCH64_ADD_ABS_LO12_NC";
+  case 278: return "R_AARCH64_LDST8_ABS_LO12_NC";
+  case 279: return "R_AARCH64_TSTBR14";
+  case 280: return "R_AARCH64_CONDBR19";
+  case 282: return "R_AARCH64_JUMP26";
+  case 283: return "R_AARCH64_CALL26";
+  case 284: return "R_AARCH64_LDST16_ABS_LO12_NC";
+  case 285: return "R_AARCH64_LDST32_ABS_LO12_NC";
+  case 286: return "R_AARCH64_LDST64_ABS_LO12_NC";
+  case 287: return "R_AARCH64_MOVW_PREL_G0";
+  case 288: return "R_AARCH64_MOVW_PREL_G0_NC";
+  case 289: return "R_AARCH64_MOVW_PREL_G1";
+  case 290: return "R_AARCH64_MOVW_PREL_G1_NC";
+  case 291: return "R_AARCH64_MOVW_PREL_G2";
+  case 292: return "R_AARCH64_MOVW_PREL_G2_NC";
+  case 293: return "R_AARCH64_MOVW_PREL_G3";
+  case 299: return "R_AARCH64_LDST128_ABS_LO12_NC";
+  case 300: return "R_AARCH64_MOVW_GOTOFF_G0";
+  case 301: return "R_AARCH64_MOVW_GOTOFF_G0_NC";
+  case 302: return "R_AARCH64_MOVW_GOTOFF_G1";
+  case 303: return "R_AARCH64_MOVW_GOTOFF_G1_NC";
+  case 304: return "R_AARCH64_MOVW_GOTOFF_G2";
+  case 305: return "R_AARCH64_MOVW_GOTOFF_G2_NC";
+  case 306: return "R_AARCH64_MOVW_GOTOFF_G3";
+  case 307: return "R_AARCH64_GOTREL64";
+  case 308: return "R_AARCH64_GOTREL32";
+  case 309: return "R_AARCH64_GOT_LD_PREL19";
+  case 310: return "R_AARCH64_LD64_GOTOFF_LO15";
+  case 311: return "R_AARCH64_ADR_GOT_PAGE";
+  case 312: return "R_AARCH64_LD64_GOT_LO12_NC";
+  case 313: return "R_AARCH64_LD64_GOTPAGE_LO15";
+  case 512: return "R_AARCH64_TLSGD_ADR_PREL21";
+  case 513: return "R_AARCH64_TLSGD_ADR_PAGE21";
+  case 514: return "R_AARCH64_TLSGD_ADD_LO12_NC";
+  case 515: return "R_AARCH64_TLSGD_MOVW_G1";
+  case 516: return "R_AARCH64_TLSGD_MOVW_G0_NC";
+  case 517: return "R_AARCH64_TLSLD_ADR_PREL21";
+  case 518: return "R_AARCH64_TLSLD_ADR_PAGE21";
+  case 519: return "R_AARCH64_TLSLD_ADD_LO12_NC";
+  case 520: return "R_AARCH64_TLSLD_MOVW_G1";
+  case 521: return "R_AARCH64_TLSLD_MOVW_G0_NC";
+  case 522: return "R_AARCH64_TLSLD_LD_PREL19";
+  case 523: return "R_AARCH64_TLSLD_MOVW_DTPREL_G2";
+  case 524: return "R_AARCH64_TLSLD_MOVW_DTPREL_G1";
+  case 525: return "R_AARCH64_TLSLD_MOVW_DTPREL_G1_NC";
+  case 526: return "R_AARCH64_TLSLD_MOVW_DTPREL_G0";
+  case 527: return "R_AARCH64_TLSLD_MOVW_DTPREL_G0_NC";
+  case 528: return "R_AARCH64_TLSLD_ADD_DTPREL_HI12";
+  case 529: return "R_AARCH64_TLSLD_ADD_DTPREL_LO12";
+  case 530: return "R_AARCH64_TLSLD_ADD_DTPREL_LO12_NC";
+  case 531: return "R_AARCH64_TLSLD_LDST8_DTPREL_LO12";
+  case 532: return "R_AARCH64_TLSLD_LDST8_DTPREL_LO12_NC";
+  case 533: return "R_AARCH64_TLSLD_LDST16_DTPREL_LO12";
+  case 534: return "R_AARCH64_TLSLD_LDST16_DTPREL_LO12_NC";
+  case 535: return "R_AARCH64_TLSLD_LDST32_DTPREL_LO12";
+  case 536: return "R_AARCH64_TLSLD_LDST32_DTPREL_LO12_NC";
+  case 537: return "R_AARCH64_TLSLD_LDST64_DTPREL_LO12";
+  case 538: return "R_AARCH64_TLSLD_LDST64_DTPREL_LO12_NC";
+  case 539: return "R_AARCH64_TLSIE_MOVW_GOTTPREL_G1";
+  case 540: return "R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC";
+  case 541: return "R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21";
+  case 542: return "R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC";
+  case 543: return "R_AARCH64_TLSIE_LD_GOTTPREL_PREL19";
+  case 544: return "R_AARCH64_TLSLE_MOVW_TPREL_G2";
+  case 545: return "R_AARCH64_TLSLE_MOVW_TPREL_G1";
+  case 546: return "R_AARCH64_TLSLE_MOVW_TPREL_G1_NC";
+  case 547: return "R_AARCH64_TLSLE_MOVW_TPREL_G0";
+  case 548: return "R_AARCH64_TLSLE_MOVW_TPREL_G0_NC";
+  case 549: return "R_AARCH64_TLSLE_ADD_TPREL_HI12";
+  case 550: return "R_AARCH64_TLSLE_ADD_TPREL_LO12";
+  case 551: return "R_AARCH64_TLSLE_ADD_TPREL_LO12_NC";
+  case 552: return "R_AARCH64_TLSLE_LDST8_TPREL_LO12";
+  case 553: return "R_AARCH64_TLSLE_LDST8_TPREL_LO12_NC";
+  case 554: return "R_AARCH64_TLSLE_LDST16_TPREL_LO12";
+  case 555: return "R_AARCH64_TLSLE_LDST16_TPREL_LO12_NC";
+  case 556: return "R_AARCH64_TLSLE_LDST32_TPREL_LO12";
+  case 557: return "R_AARCH64_TLSLE_LDST32_TPREL_LO12_NC";
+  case 558: return "R_AARCH64_TLSLE_LDST64_TPREL_LO12";
+  case 559: return "R_AARCH64_TLSLE_LDST64_TPREL_LO12_NC";
+  case 560: return "R_AARCH64_TLSDESC_LD_PREL19";
+  case 561: return "R_AARCH64_TLSDESC_ADR_PREL21";
+  case 562: return "R_AARCH64_TLSDESC_ADR_PAGE21";
+  case 563: return "R_AARCH64_TLSDESC_LD64_LO12";
+  case 564: return "R_AARCH64_TLSDESC_ADD_LO12";
+  case 565: return "R_AARCH64_TLSDESC_OFF_G1";
+  case 566: return "R_AARCH64_TLSDESC_OFF_G0_NC";
+  case 567: return "R_AARCH64_TLSDESC_LDR";
+  case 568: return "R_AARCH64_TLSDESC_ADD";
+  case 569: return "R_AARCH64_TLSDESC_CALL";
+  case 570: return "R_AARCH64_TLSLE_LDST128_TPREL_LO12";
+  case 571: return "R_AARCH64_TLSLE_LDST128_TPREL_LO12_NC";
+  case 572: return "R_AARCH64_TLSLD_LDST128_DTPREL_LO12";
+  case 573: return "R_AARCH64_TLSLD_LDST128_DTPREL_LO12_NC";
+  case 1024: return "R_AARCH64_COPY";
+  case 1025: return "R_AARCH64_GLOB_DAT";
+  case 1026: return "R_AARCH64_JUMP_SLOT";
+  case 1027: return "R_AARCH64_RELATIVE";
+  case 1028: return "R_AARCH64_TLS_DTPMOD";
+  case 1029: return "R_AARCH64_TLS_DTPREL";
+  case 1030: return "R_AARCH64_TLS_TPREL";
+  case 1031: return "R_AARCH64_TLSDESC";
+  case 1032: return "R_AARCH64_IRELATIVE";
+  default: return "Unknown";
+  }
+}
 }
 
 } // namespace feelelf
