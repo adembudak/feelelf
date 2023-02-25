@@ -45,13 +45,13 @@ auto FileHeader::decode() noexcept -> void {
       [&](Elf32_Header_t &elf_header) {
             fin.read(reinterpret_cast<char *>(&elf_header), sizeof(Elf32_Header_t)); // read ELF header
 
-            if(auto shOffset = elf_header.shOffset; shOffset != 0) {
-              fin.seekg(elf_header.shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
+            if(const auto shOffset = elf_header.shOffset; shOffset != 0) {
+              fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
 
               Elf32_Section_Header_t shstrtab;
               fin.read(reinterpret_cast<char *>(&shstrtab), sizeof(Elf32_Section_Header_t));
 
-              fin.seekg(elf_header.shOffset); // seek back to section offset and get sections to map as, [name] -> section
+              fin.seekg(shOffset); // seek back to section offset and get sections to map as, [name] -> section
 
               for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
                 Elf32_Section_Header_t section;
@@ -82,27 +82,27 @@ auto FileHeader::decode() noexcept -> void {
       [&](Elf64_Header_t &elf_header) {
             fin.read(reinterpret_cast<char *>(&elf_header), sizeof(Elf64_Header_t));
 
-            if(auto shOffset = elf_header.shOffset; shOffset != 0) {
-              fin.seekg(elf_header.shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
+            if(const auto shOffset = elf_header.shOffset; shOffset != 0) {
+              fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize));
 
               Elf64_Section_Header_t shstrtab;
               fin.read(reinterpret_cast<char *>(&shstrtab), sizeof(Elf64_Section_Header_t));
 
-              fin.seekg(elf_header.shOffset); // seek back to section offset and get sections to map as, [name] -> section
+              fin.seekg(shOffset);
 
               for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
                 Elf64_Section_Header_t section;
-                fin.read(reinterpret_cast<char *>(&section), sizeof(Elf64_Section_Header_t)); // read section
+                fin.read(reinterpret_cast<char *>(&section), sizeof(Elf64_Section_Header_t));
 
-                auto position_before_reading_section_name = fin.tellg(); // push read pointer to a variable
+                auto position_before_reading_section_name = fin.tellg();
 
                 auto sectionNameOffset = shstrtab.offset + section.name;
-                fin.seekg(sectionNameOffset); // seek section name
+                fin.seekg(sectionNameOffset);
                 std::string sectionName;
                 std::getline(fin, sectionName, '\0');
 
                 section_headers[sectionName] = section;
-                fin.seekg(position_before_reading_section_name); // pop read pointer back
+                fin.seekg(position_before_reading_section_name);
               }
             }
 
@@ -376,11 +376,10 @@ auto FileHeader::notes() const noexcept -> const std::map<std::string, std::tupl
         // word 1: bitmask of enabled entries
         // Then follow variable-length entries, one byte followed by a '\0'-terminated hwcap name string.
         // The byte gives the bit number to test if enabled, (1U << bit) & bitmask.
-        //
         std::vector<Elf_byte> entries(desc_words[0], Elf_byte{});
         const auto bitmask = desc_words[1];
         for(int i = 0; const auto entry : entries) {
-          auto _ = (1U << i) & bitmask;
+          [[maybe_unused]] auto _ = (1U << i) & bitmask; // REVISIT, implement this
         }
       }
 
