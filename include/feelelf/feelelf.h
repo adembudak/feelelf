@@ -243,8 +243,8 @@ public:
   [[nodiscard]] auto sectionHeaderEntrySize() const noexcept -> std::size_t;
   [[nodiscard]] auto numSectionHeaders() const noexcept -> int;
   [[nodiscard]] auto sectionHeaderStringTableIndex() const noexcept -> int;
-  [[nodiscard]] auto getSymbolName(const std::size_t name) noexcept -> std::string;
-  [[nodiscard]] auto getDynamicSymbolName(const std::size_t name) noexcept -> std::string;
+  [[nodiscard]] auto getSymbolName(const std::size_t name) const noexcept -> std::string;
+  [[nodiscard]] auto getDynamicSymbolName(const std::size_t name) const noexcept -> std::string;
 
 private:
   [[nodiscard]] auto isELF()   const noexcept -> bool;

@@ -469,12 +469,12 @@ auto FileHeader::is64bit() const noexcept -> bool {
   return temp == 2;
 }
 
-auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::string {
+auto FileHeader::getSymbolName(const std::size_t name) const noexcept -> std::string {
   const auto offset =
       std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
-                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers[".strtab"]);
+                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers.find(".strtab")->second);
 
-  fin.seekg(offset + symName);
+  fin.seekg(offset + name);
 
   std::string symNameStr;
   std::getline(fin, symNameStr, '\0');
@@ -482,10 +482,10 @@ auto FileHeader::getSymbolName(const std::size_t symName) noexcept -> std::strin
   return symNameStr;
 }
 
-auto FileHeader::getDynamicSymbolName(const std::size_t name) noexcept -> std::string {
+auto FileHeader::getDynamicSymbolName(const std::size_t name) const noexcept -> std::string {
   const auto offset =
       std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
-                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers[".dynstr"]);
+                            [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section_headers.find(".dynstr")->second);
 
   fin.seekg(offset + name);
 
