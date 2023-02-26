@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <ranges>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -12,9 +13,9 @@
 namespace feelelf {
 
 namespace {
-std::string_view i386_relocation_symbols(unsigned int type);
-std::string_view amd64_relocation_symbols(unsigned int type);
-std::string_view aarch64_relocation_symbols(unsigned int type);
+std::string_view i386_relocation_type(unsigned int type);
+std::string_view amd64_relocation_type(unsigned int type);
+std::string_view aarch64_relocation_type(unsigned int type);
 }
 
 // clang-format off
@@ -331,83 +332,85 @@ auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> 
 auto FileHeader::notes() const noexcept -> const std::map<std::string, std::tuple<std::string, std::size_t, std::string>> {
   std::map<std::string, std::tuple<std::string, std::size_t, std::string>> things;
 
-  for(const auto &[name, section] : section_headers) {
-    if(name.starts_with(".note")) {
-      auto offset = 
-        std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
-                              [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }}, section);
-      fin.seekg(offset);
+  auto note_section_filter = [] (const auto &section) {
+    return section.first.starts_with(".note");
+  };
 
-      Elf32_Note_header_t note;
-      fin.read(reinterpret_cast<char*>(&note), sizeof(decltype(note)));
+  for(const auto &[name, section] : section_headers | std::ranges::views::filter(note_section_filter)) {
+    auto offset = std::visit(overloaded{[](const Elf32_Section_Header_t &x32) -> std::size_t { return x32.offset; },
+                                        [](const Elf64_Section_Header_t &x64) -> std::size_t { return x64.offset; }},
+                             section);
+    fin.seekg(offset);
 
-      std::string noteName;
-      std::getline(fin, noteName, '\0');
+    Elf32_Note_header_t note;
+    fin.read(reinterpret_cast<char *>(&note), sizeof(decltype(note)));
 
-      std::vector<Elf32_Word> desc_words(note.desc_sz / sizeof(Elf32_Word), Elf32_Word{});
-      for(auto &word : desc_words)
-        fin.read(reinterpret_cast<char *>(&word), sizeof(Elf32_Word));
+    std::string noteName;
+    std::getline(fin, noteName, '\0');
 
-      // clang-format on
-      std::ostringstream sout;
-      if(note.type == 1) { // description words:
-        // word 0: OS descriptor
-        // word 1: major version of the ABI
-        // word 2: minor version of the ABI
-        // word 3: subminor version of the ABI
+    std::vector<Elf32_Word> desc_words(note.desc_sz / sizeof(Elf32_Word), Elf32_Word{});
+    for(auto &word : desc_words)
+      fin.read(reinterpret_cast<char *>(&word), sizeof(Elf32_Word));
 
-        sout << "NT_GNU_ABI_TAG\n";
-        sout << "OS: ";
+    // clang-format on
+    std::ostringstream sout;
+    if(note.type == 1) { // description words:
+      // word 0: OS descriptor
+      // word 1: major version of the ABI
+      // word 2: minor version of the ABI
+      // word 3: subminor version of the ABI
 
-        switch(desc_words[0]) {
-        case 0: sout << "Linux, "; break;
-        case 1: sout << "GNU, "; break;
-        case 2: sout << "Solaris2, "; break;
-        case 3: sout << "FreeBSD, "; break;
-        }
+      sout << "NT_GNU_ABI_TAG\n";
+      sout << "OS: ";
 
-        sout << "ABI: " << desc_words[1] << '.' << desc_words[2] << '.' << desc_words[3];
-        sout << '\n';
+      switch(desc_words[0]) {
+      case 0: sout << "Linux, "; break;
+      case 1: sout << "GNU, "; break;
+      case 2: sout << "Solaris2, "; break;
+      case 3: sout << "FreeBSD, "; break;
       }
 
-      else if(note.type == 2) {
-        sout << "NT_GNU_HWCAP"; // Synthetic hwcap information.
-        // word 0: number of entries
-        // word 1: bitmask of enabled entries
-        // Then follow variable-length entries, one byte followed by a '\0'-terminated hwcap name string.
-        // The byte gives the bit number to test if enabled, (1U << bit) & bitmask.
-        std::vector<Elf_byte> entries(desc_words[0], Elf_byte{});
-        const auto bitmask = desc_words[1];
-        for(int i = 0; const auto entry : entries) {
-          [[maybe_unused]] auto _ = (1U << i) & bitmask; // REVISIT, implement this
-        }
-      }
-
-      else if(note.type == 3) {
-        sout << "NT_GNU_BUILD_ID\n";
-        sout << "Build ID: ";
-        for(auto word : desc_words)
-          sout << std::hex << word;
-        sout << '\n';
-      }
-
-      else if(note.type == 4) {
-        sout << "NT_GNU_GOLD_VERSION\n";
-      }
-
-      else if(note.type == 5) {
-        sout << "NT_GNU_PROPERTY_TYPE_0\n";
-      }
-
-      else {
-        sout << "Unknown note type: " << '(' << "0x" << std::hex << note.type << ')' << '\n';
-        for(auto word : desc_words)
-          sout << std::hex << word << ' ';
-        sout << '\n';
-      }
-
-      things[name] = std::make_tuple(noteName, note.desc_sz, sout.str());
+      sout << "ABI: " << desc_words[1] << '.' << desc_words[2] << '.' << desc_words[3];
+      sout << '\n';
     }
+
+    else if(note.type == 2) {
+      sout << "NT_GNU_HWCAP"; // Synthetic hwcap information.
+      // word 0: number of entries
+      // word 1: bitmask of enabled entries
+      // Then follow variable-length entries, one byte followed by a '\0'-terminated hwcap name string.
+      // The byte gives the bit number to test if enabled, (1U << bit) & bitmask.
+      std::vector<Elf_byte> entries(desc_words[0], Elf_byte{});
+      const auto bitmask = desc_words[1];
+      for(int i = 0; const auto entry : entries) {
+        [[maybe_unused]] auto _ = (1U << i) & bitmask; // REVISIT, implement this
+      }
+    }
+
+    else if(note.type == 3) {
+      sout << "NT_GNU_BUILD_ID\n";
+      sout << "Build ID: ";
+      for(auto word : desc_words)
+        sout << std::hex << word;
+      sout << '\n';
+    }
+
+    else if(note.type == 4) {
+      sout << "NT_GNU_GOLD_VERSION\n";
+    }
+
+    else if(note.type == 5) {
+      sout << "NT_GNU_PROPERTY_TYPE_0\n";
+    }
+
+    else {
+      sout << "Unknown note type: " << '(' << "0x" << std::hex << note.type << ')' << '\n';
+      for(auto word : desc_words)
+        sout << std::hex << word << ' ';
+      sout << '\n';
+    }
+
+    things[name] = std::make_tuple(noteName, note.desc_sz, sout.str());
   }
 
   return things;
@@ -421,43 +424,46 @@ auto FileHeader::relocations() const noexcept
            std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>>
       things;
 
-  for(const auto &[sectionName, section] : section_headers) {
-    if(sectionName.starts_with(".rel")) {
-      if(fileClass() == "ELF32") {
-        const auto &rel_section = std::get<Elf32_Section_Header_t>(section);
+  auto relocation_section_filter = [](const auto &section) {
+    const auto &[sectionName, _] = section;
+    return sectionName.starts_with(".rel") || sectionName.starts_with(".rela");
+  };
 
-        fin.seekg(rel_section.offset);
+  for(const auto &[sectionName, section] : section_headers | std::ranges::views::filter(relocation_section_filter)) {
+    if(fileClass() == "ELF32") {
+      const auto &rel_section = std::get<Elf32_Section_Header_t>(section);
 
-        std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
+      fin.seekg(rel_section.offset);
 
-        const auto n_entry = rel_section.size / rel_section.entsize;
-        for(int i = 0; i < n_entry; ++i) {
-          Elf32_Rel rel{};
-          fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf32_Rel));
+      std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
 
-          entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_symbols(rel.info & 0xff), 0xabcdef0,
-                                            "implement_this"));
-        }
-        things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+      const auto n_entry = rel_section.size / rel_section.entsize;
+      for(int i = 0; i < n_entry; ++i) {
+        Elf32_Rel rel{};
+        fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
+
+        entries.push_back(
+            std::make_tuple(rel.offset, rel.info, i386_relocation_type(rel.info & 0xff), 0xabcdef0, "implement_this"));
       }
+      things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+    }
 
-      else {
-        const auto &rel_section = std::get<Elf64_Section_Header_t>(section);
+    else {
+      const auto &rel_section = std::get<Elf64_Section_Header_t>(section);
 
-        fin.seekg(rel_section.offset);
+      fin.seekg(rel_section.offset);
 
-        std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
+      std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
 
-        const auto n_entry = rel_section.size / rel_section.entsize;
-        for(int i = 0; i < n_entry; ++i) {
-          Elf64_Rel rel{};
-          fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf64_Rel));
+      const auto n_entry = rel_section.size / rel_section.entsize;
+      for(int i = 0; i < n_entry; ++i) {
+        Elf64_Rela rel{};
+        fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
-          entries.push_back(std::make_tuple(rel.offset, rel.info, amd64_relocation_symbols(rel.info & 0xff),
-                                            0xabcdef0123, "implement_this"));
-        }
-        things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+        entries.push_back(std::make_tuple(rel.offset, rel.info, amd64_relocation_type(rel.info & 0xffffffff),
+                                          0xabcdef0123, "implement_this"));
       }
+      things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
     }
   }
 
@@ -717,7 +723,7 @@ auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
 }
 
 namespace {
-std::string_view amd64_relocation_symbols(unsigned int type) {
+std::string_view amd64_relocation_type(unsigned int type) {
   switch(type) {
   case 0: return "R_X86_64_NONE";
   case 1: return "R_X86_64_64";
@@ -767,7 +773,7 @@ std::string_view amd64_relocation_symbols(unsigned int type) {
   }
 }
 
-std::string_view i386_relocation_symbols(unsigned int type) {
+std::string_view i386_relocation_type(unsigned int type) {
   switch(type) {
   case 0: return "R_386_NONE";
   case 1: return "R_386_32";
@@ -816,7 +822,7 @@ std::string_view i386_relocation_symbols(unsigned int type) {
   }
 }
 
-std::string_view aarch64_relocation_symbols(unsigned int type) {
+std::string_view aarch64_relocation_type(unsigned int type) {
   switch(type) {
   case 0: return "R_AARCH64_NONE";
   case 1: return "R_AARCH64_P32_ABS32";
