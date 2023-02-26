@@ -446,6 +446,7 @@ auto FileHeader::relocations() const noexcept
         entries.push_back(
             std::make_tuple(rel.offset, rel.info, i386_relocation_type(rel.info & 0xff), 0xabcdef0, "implement_this"));
       }
+
       things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
     }
 
@@ -461,9 +462,16 @@ auto FileHeader::relocations() const noexcept
         Elf64_Rela rel{};
         fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
-        entries.push_back(std::make_tuple(rel.offset, rel.info, amd64_relocation_type(rel.info & 0xffffffff),
-                                          0xabcdef0123, "implement_this"));
+        const std::string_view relocation_type = [&] {
+          if(const auto machine = this->machine(); machine == "AMD x86-64")
+            return amd64_relocation_type(rel.info & 0xffffffff);
+          else if(machine == "AARCH64") return aarch64_relocation_type(rel.info & 0xffffffff);
+          else return std::string_view{"Unknown"};
+        }();
+
+        entries.push_back(std::make_tuple(rel.offset, rel.info, relocation_type, 0xabcdef0123, "implement_this"));
       }
+
       things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
     }
   }
