@@ -414,6 +414,37 @@ auto FileHeader::notes() const noexcept -> const std::map<std::string, std::tupl
 }
 
 // clang-format off
+auto FileHeader::relocations() const noexcept
+  -> const std::map<
+                    std::pair<std::string, std::size_t>, 
+                    std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>
+                   > {
+
+  std::map<std::pair<std::string, std::size_t>, std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>> things;
+
+  for(const auto &[sectionName, section] : section_headers) {
+    if(sectionName.starts_with(".rel")) {
+      const auto &rel_section = std::get<Elf32_Section_Header_t>(section);
+      fin.seekg(rel_section.offset);
+
+      std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
+
+      const auto n_entry = rel_section.size / rel_section.entsize;
+      for(int i = 0; i < n_entry; ++i) {
+        Elf32_Rel rel{};
+        fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf32_Rel));
+
+        entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_symbols(rel.info & 0xff), 0, ""));
+      }
+
+      things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+    }
+  }
+
+  return things;
+}
+
+// clang-format off
 auto FileHeader::flags() const noexcept -> int {
   return std::visit(overloaded{[](const Elf32_Header_t &x32) { return x32.flags; },
                                [](const Elf64_Header_t &x64) { return x64.flags; }}, elf_header);

@@ -21,6 +21,7 @@ int main(int argc, const char *argv[]) {
   bool show_dynamic_symbols = false;
   bool show_headers = false;
   bool show_notes = false;
+  bool show_relocations = false;
 
   CLI::App app{{}, "readelf"};
   try {
@@ -39,6 +40,7 @@ int main(int argc, const char *argv[]) {
     app.add_flag("--symbols", show_symbols, "An alias for --syms");
     app.add_flag("--dyn-syms", show_dynamic_symbols, "Display the dynamic symbol table");
     app.add_flag("-n,--notes", show_notes, "Display the core notes (if present)");
+    app.add_flag("-r,--relocs", show_relocations, "Display the relocations (if present)");
 
     app.add_flag("-e,--headers", show_headers, "Equivalent to: -h -l -s");
 
@@ -249,10 +251,42 @@ int main(int argc, const char *argv[]) {
         fmt::print("Displaying notes found in: {}\n", noteSectionName);
         fmt::print("  Owner                Data size 	Description\n");
         fmt::print("  {}                  {:#x}       {}\n", noteName, noteDescSize, noteType);
-        // fmt::print("    {}\n", "OS: Linux, ABI: 3.2.0");
       }
     }
 
-    ///
+    if(show_relocations) {
+      const auto &relocations = header.relocations();
+      if(std::empty(relocations)) {
+        fmt::print("\nThere are no relocations in this file.\n");
+        continue;
+      }
+
+      if(header.fileClass() == "ELF32") {
+        for(const auto &[section, entries] : relocations) {
+          fmt::print("\nRelocation section '{name:}' at offset {offset:#x} contains {nEntry:} entries:\n",
+                     "name"_a = section.first, "offset"_a = section.second, "nEntry"_a = entries.size());
+
+          fmt::print(" Offset     Info    Type            Sym.Value  Sym. Name\n");
+
+          for(const auto &[offset, info, type, symbolValue, symbolName] : entries)
+            fmt::print("{offset:>08x} {info:>08x} {type:<18} {symbolValue:>08x} {symbolName:}\n", "offset"_a = offset,
+                       "info"_a = info, "type"_a = type, "symbolValue"_a = symbolValue, "symbolName"_a = symbolName);
+        }
+      }
+
+      else {
+        for(const auto &[section, entries] : relocations) {
+          fmt::print("\nRelocation section '{name:}' at offset {offset:#x} contains {nEntry:} entries:\n",
+                     "name"_a = section.first, "offset"_a = section.second, "nEntry"_a = entries.size());
+
+          fmt::print("  Offset          Info           Type           Sym. Value     Sym. Name\n");
+
+          for(const auto &[offset, info, type, symbolValue, symbolName] : entries)
+            fmt::print("{offset:>012x}  {info:>012x} {type:<18} {symbolValue:>016x} {symbolName:}\n",
+                       "offset"_a = offset, "info"_a = info, "type"_a = type, "symbolValue"_a = symbolValue,
+                       "symbolName"_a = symbolName);
+        }
+      }
+    }
   }
 }
