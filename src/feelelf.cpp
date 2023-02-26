@@ -230,6 +230,7 @@ auto FileHeader::machine() const noexcept -> std::string_view {
   case 50: return "Intel Itanium";
   case 62: return "AMD x86-64";
   case 75: return "DEC Vax";
+  case 183: return "AARCH64";
   }
 }
 
