@@ -232,7 +232,8 @@ public:
   [[nodiscard]] auto symbols()        const noexcept -> const std::vector<Symbol_t>;
   [[nodiscard]] auto dynamicSymbols() const noexcept -> const std::vector<Symbol_t>;
   [[nodiscard]] auto notes()          const noexcept -> const std::map<std::string, std::tuple<std::string, std::size_t, std::string>>;
-  [[nodiscard]] auto relocations()    const noexcept -> const std::pair<int, std::string>;
+
+  [[nodiscard]] auto relocations()    const noexcept -> const std::map<std::pair<std::string, std::size_t>, std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>>;
 
   [[nodiscard]] auto flags()      const noexcept -> int;
   [[nodiscard]] auto headerSize() const noexcept -> int;

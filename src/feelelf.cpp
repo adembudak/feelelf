@@ -46,8 +46,8 @@ auto FileHeader::decode() noexcept -> void {
             fin.read(reinterpret_cast<char *>(&elf_header), sizeof(Elf32_Header_t)); // read ELF header
 
             if(const auto shOffset = elf_header.shOffset; shOffset != 0) {
-              fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
 
+              fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
               Elf32_Section_Header_t shstrtab;
               fin.read(reinterpret_cast<char *>(&shstrtab), sizeof(Elf32_Section_Header_t));
 
@@ -413,31 +413,51 @@ auto FileHeader::notes() const noexcept -> const std::map<std::string, std::tupl
   return things;
 }
 
-// clang-format off
 auto FileHeader::relocations() const noexcept
-  -> const std::map<
-                    std::pair<std::string, std::size_t>, 
-                    std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>
-                   > {
+    -> const std::map<std::pair<std::string, std::size_t>,
+                      std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>> {
 
-  std::map<std::pair<std::string, std::size_t>, std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>> things;
+  std::map<std::pair<std::string, std::size_t>,
+           std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>>
+      things;
 
   for(const auto &[sectionName, section] : section_headers) {
     if(sectionName.starts_with(".rel")) {
-      const auto &rel_section = std::get<Elf32_Section_Header_t>(section);
-      fin.seekg(rel_section.offset);
+      if(fileClass() == "ELF32") {
+        const auto &rel_section = std::get<Elf32_Section_Header_t>(section);
 
-      std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
+        fin.seekg(rel_section.offset);
 
-      const auto n_entry = rel_section.size / rel_section.entsize;
-      for(int i = 0; i < n_entry; ++i) {
-        Elf32_Rel rel{};
-        fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf32_Rel));
+        std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
 
-        entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_symbols(rel.info & 0xff), 0, ""));
+        const auto n_entry = rel_section.size / rel_section.entsize;
+        for(int i = 0; i < n_entry; ++i) {
+          Elf32_Rel rel{};
+          fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf32_Rel));
+
+          entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_symbols(rel.info & 0xff), 0xabcdef0,
+                                            "implement_this"));
+        }
+        things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
       }
 
-      things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+      else {
+        const auto &rel_section = std::get<Elf64_Section_Header_t>(section);
+
+        fin.seekg(rel_section.offset);
+
+        std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
+
+        const auto n_entry = rel_section.size / rel_section.entsize;
+        for(int i = 0; i < n_entry; ++i) {
+          Elf64_Rel rel{};
+          fin.read(reinterpret_cast<char *>(&rel), sizeof(Elf64_Rel));
+
+          entries.push_back(std::make_tuple(rel.offset, rel.info, amd64_relocation_symbols(rel.info & 0xff),
+                                            0xabcdef0123, "implement_this"));
+        }
+        things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
+      }
     }
   }
 
@@ -756,7 +776,7 @@ std::string_view i386_relocation_symbols(unsigned int type) {
   case 4: return "R_386_PLT32";
   case 5: return "R_386_COPY";
   case 6: return "R_386_GLOB_DAT";
-  case 7: return "R_386_JMP_SLOT";
+  case 7: return "R_386_JUMP_SLOT";
   case 8: return "R_386_RELATIVE";
   case 9: return "R_386_GOTOFF";
   case 10: return "R_386_GOTPC";
