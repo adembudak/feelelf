@@ -421,6 +421,14 @@ auto FileHeader::relocations() const noexcept
     -> const std::map<std::pair<std::string, std::size_t>,
                       std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>> {
 
+  // clang-format off
+  constexpr auto r_sym_32_sym  = [] (const std::size_t info) -> size_t { return info >> 8;         };
+  constexpr auto r_sym_32_type = [] (const std::size_t info) -> size_t { return info & 0xff;       };
+
+  constexpr auto r_sym_64_type = [] (const std::size_t info) -> size_t { return info & 0xffffffff; };
+  constexpr auto r_sym_64_sym  = [] (const std::size_t info) -> size_t { return info >> 32;        };
+  // clang-format on
+
   std::map<std::pair<std::string, std::size_t>,
            std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>>>
       things;
@@ -443,8 +451,8 @@ auto FileHeader::relocations() const noexcept
         Elf32_Rel rel{};
         fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
-        entries.push_back(
-            std::make_tuple(rel.offset, rel.info, i386_relocation_type(rel.info & 0xff), 0xabcdef0, "implement_this"));
+        entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_type(r_sym_32_type(rel.info)),
+                                          0xabcdef0, "implement_this"));
       }
 
       things[std::make_pair(sectionName, rel_section.offset)] = std::move(entries);
@@ -464,8 +472,8 @@ auto FileHeader::relocations() const noexcept
 
         const std::string_view relocation_type = [&] {
           if(const auto machine = this->machine(); machine == "AMD x86-64")
-            return amd64_relocation_type(rel.info & 0xffffffff);
-          else if(machine == "AARCH64") return aarch64_relocation_type(rel.info & 0xffffffff);
+            return amd64_relocation_type(r_sym_64_type(rel.info));
+          else if(machine == "AARCH64") return aarch64_relocation_type(r_sym_64_type(rel.info));
           else return std::string_view{"Unknown"};
         }();
 
