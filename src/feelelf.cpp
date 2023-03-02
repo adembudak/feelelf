@@ -30,6 +30,8 @@ auto FileHeader::open(const char *file) noexcept -> bool {
 
   fin.open(file, std::ios::binary);
 
+  if(!fin.good()) return false;
+
   if(!isELF()) return false;
 
   if(is64bit()) elf_header = Elf64_Header_t{};
