@@ -276,21 +276,19 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
          overloaded{
            [&](const Elf32_Section_Header_t &x32) {
                  fin.seekg(x32.offset);
-                 const auto size = x32.size / x32.entsize;
-  
-                 Elf32_Symbol_t symbol{};
-                 for(int i = 0; i < size; ++i) {
-                   fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+
+                 for(std::size_t i = 0; i < (x32.size / x32.entsize); ++i) {
+                   Elf32_Symbol_t symbol{};
+                   fin.read(reinterpret_cast<char *>(&symbol), sizeof(Elf32_Symbol_t));
                    symbols.push_back(symbol);
                  }
            }, 
            [&](const Elf64_Section_Header_t &x64) {
                  fin.seekg(x64.offset);
-                 const auto size = x64.size / x64.entsize;
   
-                 Elf64_Symbol_t symbol{};
-                 for(int i = 0; i < size; ++i) {
-                   fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
+                 for(std::size_t i = 0; i < (x64.size / x64.entsize); ++i) {
+                   Elf64_Symbol_t symbol{};
+                   fin.read(reinterpret_cast<char *>(&symbol), sizeof(Elf64_Symbol_t));
                    symbols.push_back(symbol);
                  }
            }
