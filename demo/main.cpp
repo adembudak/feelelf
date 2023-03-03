@@ -191,8 +191,8 @@ int main(int argc, const char *argv[]) {
             fmt::print("{num:>7}: {value:>08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
                        "num"_a = i++, "value"_a = x86.value, "size"_a = x86.size,
                        "type"_a = feelelf::getSymbolType(x86.info), "binding"_a = feelelf::getSymbolBind(x86.info),
-                       "visibility"_a = feelelf::getSymbolVisibility(x86.other), "index"_a = x86.shndx,
-                       "name"_a = header.getSymbolName(x86.name));
+                       "visibility"_a = feelelf::getSymbolVisibility(x86.other),
+                       "index"_a = feelelf::getSymbolIndex(x86.shndx), "name"_a = header.getSymbolName(x86.name));
           }
         }
 
@@ -206,8 +206,8 @@ int main(int argc, const char *argv[]) {
             fmt::print("{num:>7}: {value:>016x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name}\n",
                        "num"_a = i++, "value"_a = x64.value, "size"_a = x64.size,
                        "type"_a = feelelf::getSymbolType(x64.info), "binding"_a = feelelf::getSymbolBind(x64.info),
-                       "visibility"_a = feelelf::getSymbolVisibility(x64.other), "index"_a = x64.shndx,
-                       "name"_a = header.getSymbolName(x64.name));
+                       "visibility"_a = feelelf::getSymbolVisibility(x64.other),
+                       "index"_a = feelelf::getSymbolIndex(x64.shndx), "name"_a = header.getSymbolName(x64.name));
           }
         }
       }

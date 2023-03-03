@@ -741,6 +741,15 @@ auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view {
   }
 }
 
+auto getSymbolIndex(const Elf_byte symIndex) noexcept -> std::string {
+  using namespace std::string_literals;
+  if(symIndex == 0)
+    return "UND"s;
+  if(symIndex == 241)
+    return "ABS"s;
+  return std::to_string(symIndex);
+}
+
 namespace {
 std::string_view amd64_relocation_type(unsigned int type) {
   switch(type) {
