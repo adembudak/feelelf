@@ -62,8 +62,7 @@ auto FileHeader::decode() noexcept -> void {
 
                 auto position_before_reading_section_name = fin.tellg(); // push read pointer to a variable
 
-                auto sectionNameOffset = shstrtab.offset + section.name;
-                fin.seekg(sectionNameOffset); // seek section name
+                fin.seekg(shstrtab.offset + section.name); // seek section name
                 std::string sectionName;
                 std::getline(fin, sectionName, '\0');
 
@@ -99,8 +98,7 @@ auto FileHeader::decode() noexcept -> void {
 
                 auto position_before_reading_section_name = fin.tellg();
 
-                auto sectionNameOffset = shstrtab.offset + section.name;
-                fin.seekg(sectionNameOffset);
+                fin.seekg(shstrtab.offset + section.name); // seek section name
                 std::string sectionName;
                 std::getline(fin, sectionName, '\0');
 
@@ -306,20 +304,18 @@ auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> 
            overloaded{
              [&](const Elf32_Section_Header_t &x32) {
                    fin.seekg(x32.offset);
-                   const auto size = x32.size / x32.entsize;
     
-                   Elf32_Symbol_t symbol{};
-                   for(int i = 0; i < size; ++i) {
+                   for(int i = 0; i < (x32.size / x32.entsize); ++i) {
+                     Elf32_Symbol_t symbol{};
                      fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
                      dynSymbols.push_back(symbol);
                    }
              }, 
              [&](const Elf64_Section_Header_t &x64) {
                    fin.seekg(x64.offset);
-                   const auto size = x64.size / x64.entsize;
     
-                   Elf64_Symbol_t symbol{};
-                   for(int i = 0; i < size; ++i) {
+                   for(int i = 0; i < (x64.size / x64.entsize); ++i) {
+                     Elf64_Symbol_t symbol{};
                      fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
                      dynSymbols.push_back(symbol);
                    }
@@ -425,8 +421,8 @@ auto FileHeader::relocations() const noexcept
   constexpr auto r_sym_32_sym  = [] (const std::size_t info) -> size_t { return info >> 8;         };
   constexpr auto r_sym_32_type = [] (const std::size_t info) -> size_t { return info & 0xff;       };
 
-  constexpr auto r_sym_64_type = [] (const std::size_t info) -> size_t { return info & 0xffffffff; };
   constexpr auto r_sym_64_sym  = [] (const std::size_t info) -> size_t { return info >> 32;        };
+  constexpr auto r_sym_64_type = [] (const std::size_t info) -> size_t { return info & 0xffffffff; };
   // clang-format on
 
   std::map<std::pair<std::string, std::size_t>,
