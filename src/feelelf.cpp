@@ -52,13 +52,13 @@ auto FileHeader::decode() noexcept -> void {
               fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize)); // seek to shstrtab section to get section names
 
               Elf32_Section_Header_t shstrtab;
-              fin.read(reinterpret_cast<char *>(&shstrtab), sizeof(Elf32_Section_Header_t));
+              fin.read(reinterpret_cast<char *>(&shstrtab), elf_header.shEntrySize);
 
               fin.seekg(shOffset); // seek back to section offset and get sections to map as, [name] -> section
 
               for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
                 Elf32_Section_Header_t section;
-                fin.read(reinterpret_cast<char *>(&section), sizeof(Elf32_Section_Header_t)); // read section
+                fin.read(reinterpret_cast<char *>(&section), elf_header.shEntrySize); // read section
 
                 auto position_before_reading_section_name = fin.tellg(); // push read pointer to a variable
 
@@ -77,7 +77,7 @@ auto FileHeader::decode() noexcept -> void {
               fin.seekg(phOffset);
 
               for(auto &ph : program_headers)
-                fin.read(reinterpret_cast<char *>(&ph), sizeof(Elf32_Program_Header_t));
+                fin.read(reinterpret_cast<char *>(&ph), elf_header.phEntrySize);
             }
 
       },
@@ -88,17 +88,17 @@ auto FileHeader::decode() noexcept -> void {
               fin.seekg(shOffset + (elf_header.shStringIndex * elf_header.shEntrySize));
 
               Elf64_Section_Header_t shstrtab;
-              fin.read(reinterpret_cast<char *>(&shstrtab), sizeof(Elf64_Section_Header_t));
+              fin.read(reinterpret_cast<char *>(&shstrtab), elf_header.shEntrySize);
 
               fin.seekg(shOffset);
 
               for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
                 Elf64_Section_Header_t section;
-                fin.read(reinterpret_cast<char *>(&section), sizeof(Elf64_Section_Header_t));
+                fin.read(reinterpret_cast<char *>(&section), elf_header.shEntrySize);
 
                 auto position_before_reading_section_name = fin.tellg();
 
-                fin.seekg(shstrtab.offset + section.name); // seek section name
+                fin.seekg(shstrtab.offset + section.name);
                 std::string sectionName;
                 std::getline(fin, sectionName, '\0');
 
@@ -113,7 +113,7 @@ auto FileHeader::decode() noexcept -> void {
               fin.seekg(phOffset);
 
               for(auto &ph : program_headers)
-                fin.read(reinterpret_cast<char *>(&ph), sizeof(Elf64_Program_Header_t));
+                fin.read(reinterpret_cast<char *>(&ph), elf_header.phEntrySize);
             }
       }
     }, elf_header);
