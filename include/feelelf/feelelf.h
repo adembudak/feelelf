@@ -168,7 +168,6 @@ struct Elf64_Dynamic_t {
     Elf64_Addr d_ptr;
   } d_un;
 };
-using Dynamic_t = std::variant<Elf32_Dynamic_t, Elf64_Dynamic_t>;
 
 struct Elf32_Note_header_t {
   Elf32_Word name_sz; // length of the note's name
@@ -182,23 +181,23 @@ struct Elf64_Note_header_t {
   Elf64_Word type;
 };
 
-struct Elf32_Rel {
+struct Elf32_Rel_t {
   Elf32_Addr offset;
   Elf32_Word info;
 };
 
-struct Elf64_Rel {
+struct Elf64_Rel_t {
   Elf64_Addr offset;
   Elf64_Xword info;
 };
 
-struct Elf32_Rela {
+struct Elf32_Rela_t {
   Elf32_Addr offset;
   Elf32_Word info;
   Elf32_Sword addend;
 };
 
-struct Elf64_Rela {
+struct Elf64_Rela_t {
   Elf64_Addr offset;
   Elf64_Xword info;
   Elf64_SXword addend;

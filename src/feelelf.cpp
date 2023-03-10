@@ -444,7 +444,7 @@ auto FileHeader::relocations() const noexcept
 
       const auto n_entry = rel_section.size / rel_section.entsize;
       for(int i = 0; i < n_entry; ++i) {
-        Elf32_Rel rel{};
+        Elf32_Rel_t rel{};
         fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
         entries.push_back(std::make_tuple(rel.offset, rel.info, i386_relocation_type(r_sym_32_type(rel.info)),
@@ -463,7 +463,7 @@ auto FileHeader::relocations() const noexcept
 
       const auto n_entry = rel_section.size / rel_section.entsize;
       for(int i = 0; i < n_entry; ++i) {
-        Elf64_Rela rel{};
+        Elf64_Rela_t rel{};
         fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
         const std::string_view relocation_type = [&] {
