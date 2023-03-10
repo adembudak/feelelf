@@ -218,6 +218,11 @@ int main(int argc, const char *argv[]) {
         fmt::print("\nSymbol table '{}' contains {} entries:\n", ".dynsym", std::size(dynSymbols));
 
         if(header.fileClass() == "ELF32") {
+
+          fmt::print("{num:>8} {value:^8} {size:>5} {type:^6} {bind:^6} {vis:<8} {index:>5} {name}\n",
+                     "num"_a = "Num:", "value"_a = "Value", "size"_a = "Size", "type"_a = "Type", "bind"_a = "Bind",
+                     "vis"_a = "Visibility", "index"_a = "Index", "name"_a = "Name");
+
           for(int i = 0; const auto &sym : dynSymbols) {
             const auto &x86 = std::get<feelelf::Elf32_Symbol_t>(sym);
             fmt::print("{num:>7}: {value:>08x} {size:>5} {type:<7} {binding:<6} {visibility:<9} {index:<5} {name:}\n",
