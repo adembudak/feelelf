@@ -22,7 +22,7 @@ if(BUILD_DEMO)
   find_package(fmt QUIET REQUIRED)
   find_package(CLI11 QUIET REQUIRED)
 
-  add_executable(readelf demo/main.cpp)
+  add_executable(readelf examples/main.cpp)
   target_link_libraries(readelf PRIVATE feelelf::feelelf fmt::fmt CLI11::CLI11)
 endif()
 
