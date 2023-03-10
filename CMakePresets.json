@@ -1,0 +1,67 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 1
+  },
+  "configurePresets": [
+    {
+      "name": "linux",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF"
+      }
+    },
+    {
+      "name": "debug_gcc",
+      "inherits": "linux",
+      "binaryDir": "${sourceDir}/build/debug_gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address"
+      },
+      "environment": {
+        "CXX": "g++"
+      }
+    },
+    {
+      "name": "release_gcc",
+      "inherits": "linux",
+      "binaryDir": "${sourceDir}/build/release_gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_STANDARD": "20"
+      },
+      "environment": {
+        "CXX": "g++"
+      }
+    },
+    {
+      "name": "debug_clang",
+      "inherits": "linux",
+      "binaryDir": "${sourceDir}/build/debug_clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++ -fsanitize=address"
+      },
+      "environment": {
+        "CXX": "clang++-15"
+      }
+    },
+    {
+      "name": "release_clang",
+      "inherits": "linux",
+      "binaryDir": "${sourceDir}/build/release_clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++"
+      },
+      "environment": {
+        "CXX": "clang++-15"
+      }
+    }
+  ]
+}
