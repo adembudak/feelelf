@@ -56,7 +56,7 @@ auto FileHeader::decode() noexcept -> void {
 
               fin.seekg(shOffset); // seek back to section offset and get sections to map as, [name] -> section
 
-              for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
+              for(std::size_t i = 0; i != elf_header.shNumber; ++i) {
                 Elf32_Section_Header_t section;
                 fin.read(reinterpret_cast<char *>(&section), elf_header.shEntrySize); // read section
 
@@ -92,7 +92,7 @@ auto FileHeader::decode() noexcept -> void {
 
               fin.seekg(shOffset);
 
-              for(std::size_t i = 0; i < elf_header.shNumber; ++i) {
+              for(std::size_t i = 0; i != elf_header.shNumber; ++i) {
                 Elf64_Section_Header_t section;
                 fin.read(reinterpret_cast<char *>(&section), elf_header.shEntrySize);
 
@@ -275,7 +275,7 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
            [&](const Elf32_Section_Header_t &x32) {
                  fin.seekg(x32.offset);
 
-                 for(std::size_t i = 0; i < (x32.size / x32.entsize); ++i) {
+                 for(std::size_t i = 0; i != (x32.size / x32.entsize); ++i) {
                    Elf32_Symbol_t symbol{};
                    fin.read(reinterpret_cast<char *>(&symbol), sizeof(Elf32_Symbol_t));
                    symbols.push_back(symbol);
@@ -284,7 +284,7 @@ auto FileHeader::symbols() const noexcept -> const std::vector<Symbol_t> {
            [&](const Elf64_Section_Header_t &x64) {
                  fin.seekg(x64.offset);
   
-                 for(std::size_t i = 0; i < (x64.size / x64.entsize); ++i) {
+                 for(std::size_t i = 0; i != (x64.size / x64.entsize); ++i) {
                    Elf64_Symbol_t symbol{};
                    fin.read(reinterpret_cast<char *>(&symbol), sizeof(Elf64_Symbol_t));
                    symbols.push_back(symbol);
@@ -305,7 +305,7 @@ auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> 
              [&](const Elf32_Section_Header_t &x32) {
                    fin.seekg(x32.offset);
     
-                   for(int i = 0; i < (x32.size / x32.entsize); ++i) {
+                   for(int i = 0; i != (x32.size / x32.entsize); ++i) {
                      Elf32_Symbol_t symbol{};
                      fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
                      dynSymbols.push_back(symbol);
@@ -314,7 +314,7 @@ auto FileHeader::dynamicSymbols() const noexcept -> const std::vector<Symbol_t> 
              [&](const Elf64_Section_Header_t &x64) {
                    fin.seekg(x64.offset);
     
-                   for(int i = 0; i < (x64.size / x64.entsize); ++i) {
+                   for(int i = 0; i != (x64.size / x64.entsize); ++i) {
                      Elf64_Symbol_t symbol{};
                      fin.read(reinterpret_cast<char *>(&symbol), sizeof(decltype(symbol)));
                      dynSymbols.push_back(symbol);
@@ -462,7 +462,7 @@ auto FileHeader::relocations() const noexcept
       std::vector<std::tuple<std::size_t, std::size_t, std::string_view, std::size_t, std::string>> entries;
 
       const auto n_entry = rel_section.size / rel_section.entsize;
-      for(int i = 0; i < n_entry; ++i) {
+      for(int i = 0; i != n_entry; ++i) {
         Elf64_Rela_t rel{};
         fin.read(reinterpret_cast<char *>(&rel), sizeof(decltype(rel)));
 
