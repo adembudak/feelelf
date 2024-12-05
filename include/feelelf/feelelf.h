@@ -4,6 +4,7 @@
 #include <map>
 #include <span>
 #include <string_view>
+#include <string>
 #include <tuple>
 #include <variant>
 #include <vector>
@@ -209,7 +210,7 @@ class FileHeader {
 
 public:
   [[nodiscard]] auto open(const char *file) noexcept -> bool;
-  auto decode() noexcept -> void;
+  void decode() noexcept;
 
   // clang-format off
   [[nodiscard]] auto identificationArray() const noexcept -> std::span<const Elf_byte>; // ident

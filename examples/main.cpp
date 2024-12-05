@@ -60,11 +60,11 @@ int main(int argc, const char *argv[]) {
 
   for(const auto &p : elf_files) {
     if(!fs::exists(p)) {
-      fmt::print("readelf: Error: '{}': No such file\n", p.c_str());
+      fmt::print("readelf: Error: '{}': No such file\n", p.string().c_str());
       continue;
     }
 
-    bool is_good = header.open(p.c_str());
+    bool is_good = header.open(p.string().c_str());
 
     if(!is_good) {
       fmt::print("readelf: Error: Not an ELF file - it has the wrong magic bytes at the start\n");
@@ -111,7 +111,7 @@ int main(int argc, const char *argv[]) {
                      "FileSiz", "MemSiz", "Flags", "Align");
 
           for(const auto &o : header.programHeaders()) {
-            auto x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
+            const auto &x86 = std::get<feelelf::Elf32_Program_Header_t>(o);
             fmt::print("{:<14} {:#08x} {:#010x} {:#010x} {:#07x} {:#07x} {:<6} {:#0x}\n",
                        feelelf::getProgramHeaderType(x86.type), x86.offset, x86.vaddr, x86.paddr, x86.filesz, x86.memsz,
                        feelelf::getProgramHeaderFlag(x86.flags), x86.align);
@@ -144,7 +144,7 @@ int main(int argc, const char *argv[]) {
                    "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &[name, section] : header.sectionHeaders()) {
-          auto x86 = std::get<feelelf::Elf32_Section_Header_t>(section);
+          const auto &x86 = std::get<feelelf::Elf32_Section_Header_t>(section);
           fmt::print("  [{num:>2}] {name:<18} {type:<15} {address:>08x} {offset:>06x} {size:>06x} "
                      "{entrySize:<9x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = name, "type"_a = feelelf::getSectionHeaderType(x86.type),
@@ -158,7 +158,7 @@ int main(int argc, const char *argv[]) {
                    "[Nr]", "Name", "Type", "Address", "Offset", "Size", "EntrySize", "Flags", "Link", "Info", "Align");
 
         for(int i = 0; const auto &[name, section] : header.sectionHeaders()) {
-          auto x64 = std::get<feelelf::Elf64_Section_Header_t>(section);
+          const auto &x64 = std::get<feelelf::Elf64_Section_Header_t>(section);
           fmt::print("  [{num:>2}] {name:<18} {type:<15} {address:>016x} {offset:>08x} {size:>016x} "
                      "{entrySize:>016x} {flags:<5} {link:<4} {info:<4} {align}\n",
                      "num"_a = i++, "name"_a = name, "type"_a = feelelf::getSectionHeaderType(x64.type),
