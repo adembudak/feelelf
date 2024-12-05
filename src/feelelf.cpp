@@ -7,16 +7,15 @@
 #include <map>
 #include <ranges>
 #include <sstream>
+#include <string>
 #include <string_view>
 #include <vector>
 
 namespace feelelf {
 
-namespace {
 std::string_view i386_relocation_type(unsigned int type);
 std::string_view amd64_relocation_type(unsigned int type);
 std::string_view aarch64_relocation_type(unsigned int type);
-}
 
 // clang-format off
 template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
@@ -40,7 +39,7 @@ auto FileHeader::open(const char *file) noexcept -> bool {
   return true;
 }
 
-auto FileHeader::decode() noexcept -> void {
+void FileHeader::decode() noexcept {
   fin.seekg(0);
   // clang-format off
   std::visit(
@@ -744,7 +743,6 @@ auto getSymbolIndex(const Elf_byte symIndex) noexcept -> std::string {
   return std::to_string(symIndex);
 }
 
-namespace {
 std::string_view amd64_relocation_type(unsigned int type) {
   switch(type) {
   case 0: return "R_X86_64_NONE";
@@ -982,6 +980,4 @@ std::string_view aarch64_relocation_type(unsigned int type) {
   default: return "Unknown";
   }
 }
-}
-
-} // namespace feelelf
+} 
