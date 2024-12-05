@@ -7,17 +7,40 @@
   },
   "configurePresets": [
     {
-      "name": "linux",
+      "name": "MSVC-release",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    },
+    {
+      "name": "MSVC-debug",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    },
+    {
+      "name": "Linux",
       "hidden": true,
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-        "CMAKE_CXX_EXTENSIONS": "OFF"
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
       }
     },
     {
-      "name": "debug_gcc",
-      "inherits": "linux",
+      "name": "GCC-debug",
+      "inherits": "Linux",
       "binaryDir": "${sourceDir}/build/debug_gcc",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -28,8 +51,8 @@
       }
     },
     {
-      "name": "release_gcc",
-      "inherits": "linux",
+      "name": "GCC-release",
+      "inherits": "Linux",
       "binaryDir": "${sourceDir}/build/release_gcc",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -40,27 +63,27 @@
       }
     },
     {
-      "name": "debug_clang",
-      "inherits": "linux",
+      "name": "Clang-debug",
+      "inherits": "Linux",
       "binaryDir": "${sourceDir}/build/debug_clang",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_FLAGS": "-stdlib=libc++ -fsanitize=address"
       },
       "environment": {
-        "CXX": "clang++-15"
+        "CXX": "clang++"
       }
     },
     {
-      "name": "release_clang",
-      "inherits": "linux",
+      "name": "Clang-release",
+      "inherits": "Linux",
       "binaryDir": "${sourceDir}/build/release_clang",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_FLAGS": "-stdlib=libc++"
       },
       "environment": {
-        "CXX": "clang++-15"
+        "CXX": "clang++"
       }
     }
   ]
