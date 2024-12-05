@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #include <cstdint>
 #include <map>
 #include <span>
@@ -262,9 +261,5 @@ private:
 [[nodiscard]] auto getSymbolBind(const Elf_byte symInfo) noexcept -> std::string_view;
 [[nodiscard]] auto getSymbolVisibility(const Elf_byte symOther) noexcept -> std::string_view;
 [[nodiscard]] auto getSymbolIndex(const Elf_byte symIndex) noexcept -> std::string;
-
-static_assert(std::copyable<FileHeader>);
-static_assert(std::movable<FileHeader>);
-static_assert(std::semiregular<FileHeader>);
 
 } // namespace feelelf
